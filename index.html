@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0f1a">
+<title>Controle de Frequência</title>
+<style>
+  :root{
+    --bg:#0b0f1a;
+    --bg2:#121826;
+    --card:#161e2e;
+    --card2:#1c2536;
+    --line:#232c40;
+    --txt:#eef2f8;
+    --muted:#8b95a7;
+    --accent:#facc15;      /* amarelo (tema agenda) */
+    --green:#22c55e;
+    --yellow:#f59e0b;
+    --red:#ef4444;
+    --blue:#3b82f6;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    padding-bottom:86px;
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    position:relative;
+  }
+
+  /* ===== HEADER ===== */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:rgba(11,15,26,.85);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+    padding:14px 18px 12px;
+  }
+  header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:.3px}
+  header .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+
+  /* ===== DATE BAR ===== */
+  .datebar{
+    display:flex;align-items:center;gap:10px;margin-top:12px;
+  }
+  .datebar button{
+    background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    width:40px;height:40px;border-radius:12px;font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .datebar button:active{transform:scale(.94)}
+  .datebar .dateinfo{
+    flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);
+    border-radius:12px;padding:7px 8px;position:relative;overflow:hidden;
+  }
+  .datebar .dateinfo .day{font-size:15px;font-weight:700}
+  .datebar .dateinfo .weekday{font-size:12px;color:var(--accent);text-transform:capitalize}
+  .datebar .dateinfo input[type=date]{
+    position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+  }
+  .today-btn{
+    text-align:center;margin-top:8px;
+  }
+  .today-btn button{
+    background:none;border:none;color:var(--blue);font-size:12.5px;cursor:pointer;font-weight:600;
+  }
+
+  /* ===== PAGES ===== */
+  .page{display:none;padding:14px 16px 20px;animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ===== DAY GROUP ===== */
+  .daygroup{margin-bottom:20px}
+  .daygroup .dayhead{
+    display:flex;align-items:center;gap:8px;margin:0 2px 10px;
+    font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;
+  }
+  .daygroup .dayhead .pill{
+    background:var(--accent);color:#111;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;
+  }
+  .daygroup.is-today .dayhead{color:var(--accent)}
+
+  /* ===== CLASS CARD ===== */
+  .cls{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 14px;margin-bottom:11px;position:relative;
+    border-left:4px solid var(--accent);
+    transition:.15s;
+  }
+  .cls .name{font-size:15px;font-weight:700;line-height:1.25}
+  .cls .type{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .cls .time{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px}
+  .cls .btns{display:flex;gap:9px;margin-top:12px}
+  .cls .btns button{
+    flex:1;border:1px solid var(--line);background:var(--card2);color:var(--txt);
+    padding:10px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:.12s;
+  }
+  .cls .btns button:active{transform:scale(.96)}
+  .cls.present{border-left-color:var(--green)}
+  .cls.absent{border-left-color:var(--red)}
+  .cls.neutral{border-left-color:var(--muted)}
+  .cls .btns button.sel-p{background:var(--green);border-color:var(--green);color:#04210f}
+  .cls .btns button.sel-a{background:var(--red);border-color:var(--red);color:#2a0606}
+  .cls .btns button.sel-n{background:var(--muted);border-color:var(--muted);color:#111}
+  .cls .status-tag{
+    position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;
+    padding:2px 9px;border-radius:999px;display:none;
+  }
+  .cls.present .status-tag{display:inline-block;background:rgba(34,197,94,.15);color:var(--green)}
+  .cls.absent .status-tag{display:inline-block;background:rgba(239,68,68,.15);color:var(--red)}
+  .cls.neutral .status-tag{display:inline-block;background:rgba(139,149,167,.18);color:var(--muted)}
+
+  .empty-day{
+    text-align:center;color:var(--muted);font-size:13px;padding:24px 10px;
+    background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);
+  }
+
+  /* ===== STATS ===== */
+  .overview{
+    background:linear-gradient(135deg,#1a2butto 0%,#161e2e 100%);
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .overview h2{margin:0 0 12px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .ov-grid{display:flex;gap:10px}
+  .ov-item{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
+  .ov-item .num{font-size:22px;font-weight:800}
+  .ov-item .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+  .ov-big{font-size:34px;font-weight:900;text-align:center;margin:4px 0 2px}
+  .ov-big small{font-size:15px;color:var(--muted);font-weight:600}
+
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 15px;margin-bottom:13px;
+  }
+  .stat .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .stat .top .mname{font-size:15px;font-weight:700;line-height:1.25}
+  .stat .top .pct{font-size:22px;font-weight:900;flex-shrink:0}
+  .stat .bar{height:9px;background:var(--card2);border-radius:999px;overflow:hidden;margin:11px 0 9px;border:1px solid var(--line)}
+  .stat .bar > div{height:100%;border-radius:999px;transition:width .5s ease,background .3s}
+  .stat .meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+  .stat .meta b{color:var(--txt)}
+  .stat .situ{font-size:12px;font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px}
+  .situ.g{background:rgba(34,197,94,.13);color:var(--green)}
+  .situ.y{background:rgba(245,158,11,.13);color:var(--yellow)}
+  .situ.r{background:rgba(239,68,68,.13);color:var(--red)}
+  .situ.n{background:var(--card2);color:var(--muted)}
+
+  /* ===== TABBAR ===== */
+  .tabbar{
+    position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:520px;
+    display:flex;background:rgba(15,20,33,.92);backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tabbar button{
+    flex:1;background:none;border:none;color:var(--muted);padding:11px 4px 10px;
+    font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  .tabbar button svg{width:23px;height:23px}
+  .tabbar button.active{color:var(--accent)}
+
+  /* ===== TOAST ===== */
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#fff;color:#111;padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;
+    opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.4);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== TOOLS ===== */
+  .tools{display:flex;gap:9px;margin-top:6px}
+  .tools button{
+    flex:1;background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    padding:11px;border-radius:12px;font-size:12.5px;font-weight:600;cursor:pointer;
+  }
+  .tools button:active{transform:scale(.97)}
+  .tools button.danger{color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="hTitle">🗓️ Registrar Frequência</h1>
+  <div class="sub" id="hSub">Marque presença ou falta em cada aula</div>
+
+  <!-- Date bar (only on register page) -->
+  <div id="dateWrap">
+    <div class="datebar">
+      <button id="prevDay">‹</button>
+      <div class="dateinfo">
+        <div class="day" id="dDay">–</div>
+        <div class="weekday" id="dWeek">–</div>
+        <input type="date" id="datePicker">
+      </div>
+      <button id="nextDay">›</button>
+    </div>
+    <div class="today-btn"><button id="goToday">Ir para hoje</button></div>
+  </div>
+</header>
+
+<!-- ===== PAGE 1: REGISTRAR ===== -->
+<section class="page active" id="pageRegister"></section>
+
+<!-- ===== PAGE 2: ESTATÍSTICAS ===== -->
+<section class="page" id="pageStats"></section>
+
+<!-- ===== TABBAR ===== -->
+<nav class="tabbar">
+  <button id="tabRegister" class="active" onclick="switchTab('register')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+    Registrar
+  </button>
+  <button id="tabStats" onclick="switchTab('stats')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/></svg>
+    Estatísticas
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   GRADE HORÁRIA (baseada nas suas aulas)
+   weekday: 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex
+   ============================================================ */
+const SUBJECTS = {
+  calc:  {name:"Cálculo e Física Aplicados à Agronomia", emoji:"📐"},
+  quim:  {name:"Química Geral e Analítica", emoji:"🧪"},
+  bot:   {name:"Botânica", emoji:"🌿"},
+  manejo:{name:"Manejo de Viveiros e Produção de Mudas", emoji:"🌱"},
+  bio:   {name:"Bioenergética e Metabolismo", emoji:"⚡"},
+};
+
+// Cada "aula" tem id único (usado no histórico), matéria, tipo, dia e horário
+const SCHEDULE = [
+  // Segunda
+  {id:"seg-calc",   subj:"calc",   type:"Preleção",   weekday:1, time:"07:30 – 09:10"},
+  {id:"seg-quim",   subj:"quim",   type:"Preleção",   weekday:1, time:"09:20 – 11:00"},
+  // Terça
+  {id:"ter-bot",    subj:"bot",    type:"Preleção",   weekday:2, time:"07:30 – 09:10"},
+  {id:"ter-quimlab",subj:"quim",   type:"Laboratório",weekday:2, time:"09:20 – 11:00"},
+  {id:"ter-botlab", subj:"bot",    type:"Laboratório",weekday:2, time:"11:00 – 12:40"},
+  // Quarta
+  {id:"qua-manejo1",subj:"manejo", type:"Extensão",   weekday:3, time:"07:30 – 09:10"},
+  {id:"qua-manejo2",subj:"manejo", type:"Extensão",   weekday:3, time:"09:20 – 11:00"},
+  // Quinta
+  {id:"qui-calc",   subj:"calc",   type:"Preleção",   weekday:4, time:"07:30 – 09:10"},
+  {id:"qui-bio",    subj:"bio",    type:"Preleção",   weekday:4, time:"09:20 – 11:00"},
+  {id:"qui-biolab", subj:"bio",    type:"Laboratório",weekday:4, time:"11:00 – 12:40"},
+];
+
+const WEEKDAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const MIN_FREQ = 75;
+const HOURS_PER_CLASS = 2; // cada registro (presença/falta) equivale a 2 aulas/2h
+
+/* ============================================================
+   ESTADO / STORAGE
+   records = { "2026-08-31": { "seg-calc":"P", "seg-quim":"A" }, ... }
+   ============================================================ */
+const STORAGE_KEY = "freq_agronomia_v1";
+const SEED_FLAG = "freq_agronomia_v1_seeded";
+let records = {};
+let current = new Date();
+
+function load(){
+  try{ records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e){ records = {}; }
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+
+/* Preenche o histórico desde o início das aulas (10/08) até hoje.
+   Só roda UMA vez (marca a flag) e nunca sobrescreve registros já existentes. */
+function seedHistory(){
+  if(localStorage.getItem(SEED_FLAG)) return;
+
+  const start = new Date(2026,7,10);   // 10/08/2026
+  const faultDay1 = new Date(2026,7,10); // faltou
+  const faultDay2 = new Date(2026,7,11); // faltou
+  const end = new Date(); end.setHours(0,0,0,0);
+
+  let d = new Date(start);
+  while(d <= end){
+    const wd = d.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd);
+    if(classes.length){
+      const dayKey = keyOf(d);
+      if(!records[dayKey]) records[dayKey] = {};
+      const wasFaultDay = isSameDay(d,faultDay1) || isSameDay(d,faultDay2);
+      classes.forEach(c=>{
+        if(records[dayKey][c.id]===undefined){
+          records[dayKey][c.id] = wasFaultDay ? "A" : "P";
+        }
+      });
+    }
+    d.setDate(d.getDate()+1);
+  }
+  save();
+  localStorage.setItem(SEED_FLAG,"1");
+}
+
+function keyOf(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function isSameDay(a,b){ return keyOf(a)===keyOf(b); }
+
+/* ============================================================
+   PÁGINA 1 - REGISTRAR
+   ============================================================ */
+function renderDateBar(){
+  const wd = current.getDay();
+  document.getElementById("dDay").textContent =
+    String(current.getDate()).padStart(2,"0")+"/"+String(current.getMonth()+1).padStart(2,"0")+"/"+current.getFullYear();
+  document.getElementById("dWeek").textContent = WEEKDAY_NAMES[wd];
+  document.getElementById("datePicker").value = keyOf(current);
+}
+
+function renderRegister(){
+  renderDateBar();
+  const wd = current.getDay();
+  const dayKey = keyOf(current);
+  const dayRec = records[dayKey] || {};
+  const classes = SCHEDULE.filter(c=>c.weekday===wd);
+  const box = document.getElementById("pageRegister");
+
+  if(classes.length===0){
+    box.innerHTML = `<div class="empty-day">😴 Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
+    return;
+  }
+
+  const todayFlag = isSameDay(current, new Date());
+  let html = `<div class="daygroup ${todayFlag?'is-today':''}">
+    <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
+
+  classes.forEach(c=>{
+    const s = SUBJECTS[c.subj];
+    const st = dayRec[c.id]; // "P" | "A" | "N" | undefined
+    const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
+    const tag = st==="P"?"✓ Presente":st==="A"?"✕ Falta":st==="N"?"⊘ Sem aula":"";
+    html += `
+      <div class="cls ${cls}" id="card-${c.id}">
+        <span class="status-tag">${tag}</span>
+        <div class="name">${s.emoji} ${s.name}</div>
+        <div class="type">${c.type}</div>
+        <div class="time">🕐 ${c.time}</div>
+        <div class="btns">
+          <button class="${st==="P"?"sel-p":""}" onclick="mark('${c.id}','P')">✓ Presente</button>
+          <button class="${st==="A"?"sel-a":""}" onclick="mark('${c.id}','A')">✕ Falta</button>
+        </div>
+        <div class="btns" style="margin-top:8px">
+          <button class="${st==="N"?"sel-n":""}" onclick="mark('${c.id}','N')">⊘ Não teve aula</button>
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+  box.innerHTML = html;
+}
+
+function mark(classId, status){
+  const dayKey = keyOf(current);
+  if(!records[dayKey]) records[dayKey] = {};
+  // toggle: se clicar de novo no mesmo, desmarca
+  if(records[dayKey][classId]===status){
+    delete records[dayKey][classId];
+    toast("Registro removido");
+  }else{
+    records[dayKey][classId]=status;
+    toast(status==="P"?"✓ Presença registrada":status==="A"?"✕ Falta registrada":"⊘ Marcado como sem aula");
+  }
+  if(Object.keys(records[dayKey]).length===0) delete records[dayKey];
+  save();
+  renderRegister();
+}
+
+/* ============================================================
+   PÁGINA 2 - ESTATÍSTICAS
+   ============================================================ */
+function computeStats(){
+  // por matéria: presenças e faltas somando todo o histórico
+  const acc = {};
+  Object.keys(SUBJECTS).forEach(k=>acc[k]={p:0,a:0});
+  Object.values(records).forEach(day=>{
+    Object.entries(day).forEach(([classId,st])=>{
+      const cls = SCHEDULE.find(c=>c.id===classId);
+      if(!cls) return;
+      if(st==="P") acc[cls.subj].p++;
+      else if(st==="A") acc[cls.subj].a++;
+    });
+  });
+  return acc;
+}
+
+function renderStats(){
+  const acc = computeStats();
+  const box = document.getElementById("pageStats");
+
+  let totP=0,totA=0;
+  Object.values(acc).forEach(v=>{totP+=v.p;totA+=v.a;});
+  // converte para aulas/horas (cada registro = HOURS_PER_CLASS aulas)
+  totP*=HOURS_PER_CLASS; totA*=HOURS_PER_CLASS;
+  const totTotal = totP+totA;
+  const totPct = totTotal? (totP/totTotal*100):0;
+
+  let html = `
+    <div class="overview">
+      <h2>Frequência Geral</h2>
+      <div class="ov-big" style="color:${colorFor(totPct,totTotal)}">${totTotal?totPct.toFixed(0):"–"}<small>%</small></div>
+      <div class="ov-grid">
+        <div class="ov-item"><div class="num" style="color:var(--green)">${totP}</div><div class="lbl">Presenças</div></div>
+        <div class="ov-item"><div class="num" style="color:var(--red)">${totA}</div><div class="lbl">Faltas</div></div>
+        <div class="ov-item"><div class="num">${totTotal}</div><div class="lbl">Aulas</div></div>
+      </div>
+    </div>`;
+
+  Object.keys(SUBJECTS).forEach(k=>{
+    const s = SUBJECTS[k];
+    const {p,a} = acc[k];
+    // cada registro (card marcado) equivale a HOURS_PER_CLASS aulas/horas
+    const pH = p*HOURS_PER_CLASS, aH = a*HOURS_PER_CLASS;
+    const total = pH+aH;
+    const pct = total? (pH/total*100):0;
+    const color = colorFor(pct,total);
+    // quantas aulas (já em horas) ainda pode faltar mantendo >=75%
+    // margem: enquanto pH/(pH+aH+x) >= 0.75  ->  x <= (pH/0.75) - pH - aH
+    let canMiss = Math.floor((pH/(MIN_FREQ/100)) - pH - aH);
+    if(canMiss<0) canMiss=0;
+
+    let situClass="n", situTxt="Sem registros";
+    if(total>0){
+      if(pct>=80){situClass="g";situTxt="🟢 Situação segura";}
+      else if(pct>=MIN_FREQ){situClass="y";situTxt="🟡 Atenção – perto do limite";}
+      else {situClass="r";situTxt="🔴 Abaixo de 75% – risco de reprovação";}
+    }
+
+    html += `
+      <div class="stat">
+        <div class="top">
+          <div class="mname">${s.emoji} ${s.name}</div>
+          <div class="pct" style="color:${color}">${total?pct.toFixed(0)+"%":"–"}</div>
+        </div>
+        <div class="bar"><div style="width:${total?pct:0}%;background:${color}"></div></div>
+        <div class="meta">
+          <span>✅ Presenças: <b>${pH}</b> aulas</span>
+          <span>❌ Faltas: <b>${aH}</b> aulas</span>
+        </div>
+        <div class="situ ${situClass}">${situTxt}</div>
+        ${total>0 && pct>=MIN_FREQ ? `<div class="meta" style="margin-top:8px"><span>Ainda pode faltar <b>${canMiss}</b> aula(s) seguindo assim</span></div>`:``}
+      </div>`;
+  });
+
+  // Ferramentas
+  html += `
+    <div class="tools">
+      <button onclick="exportData()">⬇️ Exportar backup</button>
+      <button onclick="document.getElementById('importFile').click()">⬆️ Importar</button>
+      <button class="danger" onclick="resetData()">🗑️ Limpar tudo</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">
+      Frequência mínima exigida: ${MIN_FREQ}% · Dados salvos neste navegador
+    </div>`;
+
+  box.innerHTML = html;
+}
+
+function colorFor(pct,total){
+  if(!total) return "var(--muted)";
+  if(pct>=80) return "var(--green)";
+  if(pct>=MIN_FREQ) return "var(--yellow)";
+  return "var(--red)";
+}
+
+/* ============================================================
+   NAVEGAÇÃO / TABS
+   ============================================================ */
+function switchTab(tab){
+  const isReg = tab==="register";
+  document.getElementById("pageRegister").classList.toggle("active",isReg);
+  document.getElementById("pageStats").classList.toggle("active",!isReg);
+  document.getElementById("tabRegister").classList.toggle("active",isReg);
+  document.getElementById("tabStats").classList.toggle("active",!isReg);
+  document.getElementById("dateWrap").style.display = isReg?"block":"none";
+  document.getElementById("hTitle").textContent = isReg?"🗓️ Registrar Frequência":"📊 Estatísticas";
+  document.getElementById("hSub").textContent = isReg?"Marque presença ou falta em cada aula":"Seu desempenho em cada matéria";
+  if(isReg) renderRegister(); else renderStats();
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   FERRAMENTAS
+   ============================================================ */
+function exportData(){
+  const blob = new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="frequencia_backup.json"; a.click();
+  URL.revokeObjectURL(url);
+  toast("Backup exportado");
+}
+function importData(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{ records = JSON.parse(ev.target.result); save(); toast("Backup importado"); renderStats(); }
+    catch(err){ toast("Arquivo inválido"); }
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  if(confirm("Apagar TODOS os registros de frequência? Essa ação não pode ser desfeita.")){
+    records={}; save();
+    localStorage.removeItem(SEED_FLAG);
+    seedHistory();
+    toast("Tudo limpo e histórico recarregado"); renderStats();
+  }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),1600);
+}
+
+/* ============================================================
+   EVENTOS DE DATA
+   ============================================================ */
+document.getElementById("prevDay").onclick=()=>{current.setDate(current.getDate()-1);renderRegister();};
+document.getElementById("nextDay").onclick=()=>{current.setDate(current.getDate()+1);renderRegister();};
+document.getElementById("goToday").onclick=()=>{current=new Date();renderRegister();toast("Hoje");};
+document.getElementById("datePicker").onchange=e=>{
+  const [y,m,d]=e.target.value.split("-").map(Number);
+  current=new Date(y,m-1,d); renderRegister();
+};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+load();
+seedHistory();
+renderRegister();
+</script>
+</body>
+</html>
