@@ -3,72 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0b0f1a">
+<meta name="theme-color" content="#050506">
 <title>Controle de Frequência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0f1a;
-    --bg2:#121826;
-    --card:#161e2e;
-    --card2:#1c2536;
-    --line:#232c40;
-    --txt:#eef2f8;
-    --muted:#8b95a7;
-    --accent:#facc15;      /* amarelo (tema agenda) */
+    --bg:#050506;
+    --bg2:#0a0a0c;
+    --card:#0d0e12;
+    --card2:#15161d;
+    --line:rgba(255,255,255,.08);
+    --txt:#ededef;
+    --muted:#8a8f98;
+    --accent:#818cf8;      /* indigo — tema cinema dark */
+    --accent2:#5e6ad2;
+    --accent-glow:rgba(94,106,210,.35);
     --green:#22c55e;
     --yellow:#f59e0b;
     --red:#ef4444;
     --blue:#3b82f6;
-    --radius:18px;
+    --radius:16px;
+    --ease:cubic-bezier(.16,1,.3,1);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     background:var(--bg);
+    background-image:radial-gradient(circle at 20% -10%,rgba(94,106,210,.14),transparent 45%),
+                      radial-gradient(circle at 90% 0%,rgba(94,106,210,.08),transparent 40%);
+    background-attachment:fixed;
     color:var(--txt);
-    padding-bottom:86px;
+    padding-bottom:92px;
     max-width:520px;
     margin:0 auto;
     min-height:100vh;
     position:relative;
+    -webkit-font-smoothing:antialiased;
   }
+  button{font-family:inherit;touch-action:manipulation;cursor:pointer}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
   /* ===== HEADER ===== */
   header{
     position:sticky;top:0;z-index:20;
-    background:rgba(11,15,26,.85);
-    backdrop-filter:blur(14px);
+    background:rgba(5,5,6,.78);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
     border-bottom:1px solid var(--line);
-    padding:14px 18px 12px;
+    padding:16px 18px 14px;
   }
-  header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:.3px}
-  header .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+  header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.2px}
+  header .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
 
   /* ===== DATE BAR ===== */
   .datebar{
-    display:flex;align-items:center;gap:10px;margin-top:12px;
+    display:flex;align-items:center;gap:8px;margin-top:14px;
   }
   .datebar button{
     background:var(--card2);border:1px solid var(--line);color:var(--txt);
-    width:40px;height:40px;border-radius:12px;font-size:20px;cursor:pointer;
+    width:40px;height:40px;border-radius:12px;font-size:18px;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    transition:transform .15s var(--ease),background .15s;
   }
-  .datebar button:active{transform:scale(.94)}
+  .datebar button:active{transform:scale(.92);background:var(--card)}
   .datebar .dateinfo{
     flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);
     border-radius:12px;padding:7px 8px;position:relative;overflow:hidden;
   }
-  .datebar .dateinfo .day{font-size:15px;font-weight:700}
-  .datebar .dateinfo .weekday{font-size:12px;color:var(--accent);text-transform:capitalize}
+  .datebar .dateinfo .day{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .datebar .dateinfo .weekday{font-size:11.5px;color:var(--accent);text-transform:capitalize;font-weight:600}
   .datebar .dateinfo input[type=date]{
-    position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+    position:absolute;inset:0;opacity:0;width:100%;height:100%;
   }
   .today-btn{
-    text-align:center;margin-top:8px;
+    text-align:center;margin-top:10px;
   }
   .today-btn button{
-    background:none;border:none;color:var(--blue);font-size:12.5px;cursor:pointer;font-weight:600;
+    background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:600;
+    padding:4px 8px;
   }
 
   /* ===== PAGES ===== */
@@ -83,72 +98,76 @@
     font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;
   }
   .daygroup .dayhead .pill{
-    background:var(--accent);color:#111;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;
+    background:var(--accent);color:#0b0b14;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;
   }
   .daygroup.is-today .dayhead{color:var(--accent)}
 
   /* ===== CLASS CARD ===== */
   .cls{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:13px 14px;margin-bottom:11px;position:relative;
-    border-left:4px solid var(--accent);
-    transition:.15s;
+    padding:14px 15px;margin-bottom:11px;position:relative;
+    box-shadow:inset 3px 0 0 var(--accent);
+    transition:box-shadow .2s var(--ease);
   }
-  .cls .name{font-size:15px;font-weight:700;line-height:1.25}
-  .cls .type{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .cls .name{font-size:15px;font-weight:700;line-height:1.3;padding-right:72px}
+  .cls .type{font-size:11.5px;color:var(--muted);margin-top:3px}
   .cls .time{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px}
-  .cls .btns{display:flex;gap:9px;margin-top:12px}
+  .cls .time svg{width:13px;height:13px;flex-shrink:0}
+  .cls .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}
   .cls .btns button{
-    flex:1;border:1px solid var(--line);background:var(--card2);color:var(--txt);
-    padding:10px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:6px;transition:.12s;
+    border:1px solid var(--line);background:var(--card2);color:var(--muted);
+    padding:10px 4px;border-radius:12px;font-size:11.5px;font-weight:700;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    transition:transform .12s var(--ease),background .15s,color .15s,border-color .15s;
+    min-height:52px;
   }
-  .cls .btns button:active{transform:scale(.96)}
-  .cls.present{border-left-color:var(--green)}
-  .cls.absent{border-left-color:var(--red)}
-  .cls.neutral{border-left-color:var(--muted)}
-  .cls .btns button.sel-p{background:var(--green);border-color:var(--green);color:#04210f}
-  .cls .btns button.sel-a{background:var(--red);border-color:var(--red);color:#2a0606}
-  .cls .btns button.sel-n{background:var(--muted);border-color:var(--muted);color:#111}
+  .cls .btns button svg{width:18px;height:18px}
+  .cls .btns button:active{transform:scale(.94)}
+  .cls.present{box-shadow:inset 3px 0 0 var(--green)}
+  .cls.absent{box-shadow:inset 3px 0 0 var(--red)}
+  .cls.neutral{box-shadow:inset 3px 0 0 var(--muted)}
+  .cls .btns button.sel-p{background:rgba(34,197,94,.14);border-color:var(--green);color:var(--green)}
+  .cls .btns button.sel-a{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
+  .cls .btns button.sel-n{background:rgba(138,143,152,.14);border-color:var(--muted);color:var(--txt)}
   .cls .status-tag{
-    position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;
-    padding:2px 9px;border-radius:999px;display:none;
+    position:absolute;top:14px;right:15px;font-size:10.5px;font-weight:800;
+    padding:3px 9px;border-radius:999px;display:none;letter-spacing:.2px;
   }
   .cls.present .status-tag{display:inline-block;background:rgba(34,197,94,.15);color:var(--green)}
   .cls.absent .status-tag{display:inline-block;background:rgba(239,68,68,.15);color:var(--red)}
   .cls.neutral .status-tag{display:inline-block;background:rgba(139,149,167,.18);color:var(--muted)}
 
   .empty-day{
-    text-align:center;color:var(--muted);font-size:13px;padding:24px 10px;
+    text-align:center;color:var(--muted);font-size:13px;padding:32px 10px;
     background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);
   }
 
   /* ===== STATS ===== */
   .overview{
-    background:linear-gradient(135deg,#1a2butto 0%,#161e2e 100%);
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px;margin-bottom:18px;
+    background:linear-gradient(155deg,rgba(94,106,210,.16) 0%,var(--card) 55%);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;margin-bottom:18px;
   }
-  .overview h2{margin:0 0 12px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .overview h2{margin:0 0 12px;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
   .ov-grid{display:flex;gap:10px}
   .ov-item{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
-  .ov-item .num{font-size:22px;font-weight:800}
+  .ov-item .num{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
   .ov-item .lbl{font-size:11px;color:var(--muted);margin-top:2px}
-  .ov-big{font-size:34px;font-weight:900;text-align:center;margin:4px 0 2px}
+  .ov-big{font-size:36px;font-weight:900;text-align:center;margin:4px 0 4px;font-variant-numeric:tabular-nums}
   .ov-big small{font-size:15px;color:var(--muted);font-weight:600}
 
   .stat{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px 15px;margin-bottom:13px;
+    padding:15px 16px;margin-bottom:12px;
   }
   .stat .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .stat .top .mname{font-size:15px;font-weight:700;line-height:1.25}
-  .stat .top .pct{font-size:22px;font-weight:900;flex-shrink:0}
-  .stat .bar{height:9px;background:var(--card2);border-radius:999px;overflow:hidden;margin:11px 0 9px;border:1px solid var(--line)}
-  .stat .bar > div{height:100%;border-radius:999px;transition:width .5s ease,background .3s}
+  .stat .top .mname{font-size:15px;font-weight:700;line-height:1.3}
+  .stat .top .pct{font-size:21px;font-weight:900;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .stat .bar{height:8px;background:var(--card2);border-radius:999px;overflow:hidden;margin:12px 0 10px;border:1px solid var(--line)}
+  .stat .bar > div{height:100%;border-radius:999px;transition:width .5s var(--ease),background .3s}
   .stat .meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
-  .stat .meta b{color:var(--txt)}
-  .stat .situ{font-size:12px;font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px}
+  .stat .meta b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .stat .situ{font-size:11.5px;font-weight:700;margin-top:9px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px}
   .situ.g{background:rgba(34,197,94,.13);color:var(--green)}
   .situ.y{background:rgba(245,158,11,.13);color:var(--yellow)}
   .situ.r{background:rgba(239,68,68,.13);color:var(--red)}
@@ -158,21 +177,24 @@
   .tabbar{
     position:fixed;bottom:0;left:50%;transform:translateX(-50%);
     width:100%;max-width:520px;
-    display:flex;background:rgba(15,20,33,.92);backdrop-filter:blur(16px);
+    display:flex;background:rgba(8,8,10,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom);
   }
   .tabbar button{
-    flex:1;background:none;border:none;color:var(--muted);padding:11px 4px 10px;
-    font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
+    flex:1;background:none;border:none;color:var(--muted);padding:12px 4px 10px;
+    font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:color .15s;
   }
-  .tabbar button svg{width:23px;height:23px}
+  .tabbar button svg{width:22px;height:22px;transition:transform .15s var(--ease)}
   .tabbar button.active{color:var(--accent)}
+  .tabbar button.active svg{transform:translateY(-1px)}
+  .tabbar button:active svg{transform:scale(.9)}
 
   /* ===== TOAST ===== */
   .toast{
     position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:#fff;color:#111;padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;
-    opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.4);
+    background:var(--txt);color:#0b0b0d;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;
+    opacity:0;pointer-events:none;transition:.25s var(--ease);z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -180,16 +202,18 @@
   .tools{display:flex;gap:9px;margin-top:6px}
   .tools button{
     flex:1;background:var(--card2);border:1px solid var(--line);color:var(--muted);
-    padding:11px;border-radius:12px;font-size:12.5px;font-weight:600;cursor:pointer;
+    padding:11px;border-radius:12px;font-size:12.5px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s var(--ease);
   }
-  .tools button:active{transform:scale(.97)}
+  .tools button svg{width:15px;height:15px}
+  .tools button:active{transform:scale(.96)}
   .tools button.danger{color:var(--red)}
 </style>
 </head>
 <body>
 
 <header>
-  <h1 id="hTitle">🗓️ Registrar Frequência</h1>
+  <h1 id="hTitle">Registrar Frequência</h1>
   <div class="sub" id="hSub">Marque presença ou falta em cada aula</div>
 
   <!-- Date bar (only on register page) -->
@@ -332,7 +356,7 @@ function renderRegister(){
   const box = document.getElementById("pageRegister");
 
   if(classes.length===0){
-    box.innerHTML = `<div class="empty-day">😴 Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
+    box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
     return;
   }
 
@@ -340,23 +364,26 @@ function renderRegister(){
   let html = `<div class="daygroup ${todayFlag?'is-today':''}">
     <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
 
+  const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+  const ICON_BAN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`;
+  const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+
   classes.forEach(c=>{
     const s = SUBJECTS[c.subj];
     const st = dayRec[c.id]; // "P" | "A" | "N" | undefined
     const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
-    const tag = st==="P"?"✓ Presente":st==="A"?"✕ Falta":st==="N"?"⊘ Sem aula":"";
+    const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":"";
     html += `
       <div class="cls ${cls}" id="card-${c.id}">
         <span class="status-tag">${tag}</span>
         <div class="name">${s.emoji} ${s.name}</div>
         <div class="type">${c.type}</div>
-        <div class="time">🕐 ${c.time}</div>
+        <div class="time">${ICON_CLOCK} ${c.time}</div>
         <div class="btns">
-          <button class="${st==="P"?"sel-p":""}" onclick="mark('${c.id}','P')">✓ Presente</button>
-          <button class="${st==="A"?"sel-a":""}" onclick="mark('${c.id}','A')">✕ Falta</button>
-        </div>
-        <div class="btns" style="margin-top:8px">
-          <button class="${st==="N"?"sel-n":""}" onclick="mark('${c.id}','N')">⊘ Não teve aula</button>
+          <button class="${st==="P"?"sel-p":""}" onclick="mark('${c.id}','P')">${ICON_CHECK}Presente</button>
+          <button class="${st==="A"?"sel-a":""}" onclick="mark('${c.id}','A')">${ICON_X}Falta</button>
+          <button class="${st==="N"?"sel-n":""}" onclick="mark('${c.id}','N')">${ICON_BAN}Sem aula</button>
         </div>
       </div>`;
   });
@@ -457,11 +484,14 @@ function renderStats(){
   });
 
   // Ferramentas
+  const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg>`;
+  const ICON_UPLOAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0 4 4m-4-4-4 4M4 19h16"/></svg>`;
+  const ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>`;
   html += `
     <div class="tools">
-      <button onclick="exportData()">⬇️ Exportar backup</button>
-      <button onclick="document.getElementById('importFile').click()">⬆️ Importar</button>
-      <button class="danger" onclick="resetData()">🗑️ Limpar tudo</button>
+      <button onclick="exportData()">${ICON_DOWNLOAD}Exportar</button>
+      <button onclick="document.getElementById('importFile').click()">${ICON_UPLOAD}Importar</button>
+      <button class="danger" onclick="resetData()">${ICON_TRASH}Limpar</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
     <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">
@@ -488,7 +518,7 @@ function switchTab(tab){
   document.getElementById("tabRegister").classList.toggle("active",isReg);
   document.getElementById("tabStats").classList.toggle("active",!isReg);
   document.getElementById("dateWrap").style.display = isReg?"block":"none";
-  document.getElementById("hTitle").textContent = isReg?"🗓️ Registrar Frequência":"📊 Estatísticas";
+  document.getElementById("hTitle").textContent = isReg?"Registrar Frequência":"Estatísticas";
   document.getElementById("hSub").textContent = isReg?"Marque presença ou falta em cada aula":"Seu desempenho em cada matéria";
   if(isReg) renderRegister(); else renderStats();
   window.scrollTo(0,0);
