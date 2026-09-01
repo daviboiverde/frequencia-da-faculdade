@@ -267,6 +267,31 @@
   .tools button svg{width:15px;height:15px}
   .tools button:active{transform:scale(.96)}
   .tools button.danger{color:var(--red)}
+
+  /* ===== AGENDA ===== */
+  .agenda-cls{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 15px;margin-bottom:11px;position:relative;
+    box-shadow:inset 3px 0 0 var(--accent);
+  }
+  .agenda-cls.now{box-shadow:inset 3px 0 0 var(--green)}
+  .agenda-cls .name{font-size:15px;font-weight:700;line-height:1.3;padding-right:64px}
+  .agenda-cls .type{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .agenda-cls .time{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px}
+  .agenda-cls .time svg{width:13px;height:13px;flex-shrink:0}
+  .agenda-cls .now-tag{
+    position:absolute;top:14px;right:15px;font-size:10.5px;font-weight:800;
+    padding:3px 9px;border-radius:999px;background:rgba(34,197,94,.15);color:var(--green);
+    letter-spacing:.2px;
+  }
+  .room-row{display:flex;gap:8px;margin-top:12px}
+  .room-chip{
+    flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;
+    padding:9px 10px;display:flex;align-items:center;gap:8px;
+  }
+  .room-chip svg{width:16px;height:16px;color:var(--accent);flex-shrink:0}
+  .room-chip .rc-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .room-chip .rc-val{font-size:13.5px;font-weight:700}
 </style>
 </head>
 <body>
@@ -294,6 +319,9 @@
   </div>
 </header>
 
+<!-- ===== PAGE 0: AGENDA ===== -->
+<section class="page" id="pageAgenda"></section>
+
 <!-- ===== PAGE 1: REGISTRAR ===== -->
 <section class="page active" id="pageRegister"></section>
 
@@ -302,6 +330,10 @@
 
 <!-- ===== TABBAR ===== -->
 <nav class="tabbar">
+  <button id="tabAgenda" onclick="switchTab('agenda')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+    Agenda
+  </button>
   <button id="tabRegister" class="active" onclick="switchTab('register')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
     Registrar
@@ -340,19 +372,19 @@ const SUBJECTS = {
 // Cada "aula" tem id único (usado no histórico), matéria, tipo, dia e horário
 const SCHEDULE = [
   // Segunda
-  {id:"seg-calc",   subj:"calc",   type:"Preleção",   weekday:1, time:"07:30 – 09:10"},
-  {id:"seg-quim",   subj:"quim",   type:"Preleção",   weekday:1, time:"09:20 – 11:00"},
+  {id:"seg-calc",   subj:"calc",   type:"Preleção",   weekday:1, time:"07:30 – 09:10", block:"BL-S", room:"SL-106"},
+  {id:"seg-quim",   subj:"quim",   type:"Preleção",   weekday:1, time:"09:20 – 11:00", block:"BL-S", room:"SL-107"},
   // Terça
-  {id:"ter-bot",    subj:"bot",    type:"Preleção",   weekday:2, time:"07:30 – 09:10"},
-  {id:"ter-quimlab",subj:"quim",   type:"Laboratório",weekday:2, time:"09:20 – 11:00"},
-  {id:"ter-botlab", subj:"bot",    type:"Laboratório",weekday:2, time:"11:00 – 12:40"},
+  {id:"ter-bot",    subj:"bot",    type:"Preleção",   weekday:2, time:"07:30 – 09:10", block:"BL-S", room:"SL-106"},
+  {id:"ter-quimlab",subj:"quim",   type:"Laboratório",weekday:2, time:"09:20 – 11:00", block:"BL-G", room:"SL-107"},
+  {id:"ter-botlab", subj:"bot",    type:"Laboratório",weekday:2, time:"11:00 – 12:40", block:"BL-G", room:"SL-104"},
   // Quarta
-  {id:"qua-manejo1",subj:"manejo", type:"Extensão",   weekday:3, time:"07:30 – 09:10"},
-  {id:"qua-manejo2",subj:"manejo", type:"Extensão",   weekday:3, time:"09:20 – 11:00"},
+  {id:"qua-manejo1",subj:"manejo", type:"Extensão",   weekday:3, time:"07:30 – 09:10", block:"ITS",  room:null},
+  {id:"qua-manejo2",subj:"manejo", type:"Extensão",   weekday:3, time:"09:20 – 11:00", block:"BL-E", room:"SL-003"},
   // Quinta
-  {id:"qui-calc",   subj:"calc",   type:"Preleção",   weekday:4, time:"07:30 – 09:10"},
-  {id:"qui-bio",    subj:"bio",    type:"Preleção",   weekday:4, time:"09:20 – 11:00"},
-  {id:"qui-biolab", subj:"bio",    type:"Laboratório",weekday:4, time:"11:00 – 12:40"},
+  {id:"qui-calc",   subj:"calc",   type:"Preleção",   weekday:4, time:"07:30 – 09:10", block:"BL-S", room:"SL-106"},
+  {id:"qui-bio",    subj:"bio",    type:"Preleção",   weekday:4, time:"09:20 – 11:00", block:"BL-S", room:"SL-106"},
+  {id:"qui-biolab", subj:"bio",    type:"Laboratório",weekday:4, time:"11:00 – 12:40", block:"BL-G", room:"SL-107"},
 ];
 
 const WEEKDAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
@@ -368,6 +400,7 @@ const SEED_FLAG = "freq_agronomia_v1_seeded";
 let records = {};
 let current = new Date();
 let viewMode = "day"; // "day" | "week"
+let activeTab = "register"; // "agenda" | "register" | "stats"
 
 function load(){
   try{ records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
@@ -409,6 +442,15 @@ function keyOf(d){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 function isSameDay(a,b){ return keyOf(a)===keyOf(b); }
+
+function isNowInRange(dateObj, startStr, endStr){
+  if(!isSameDay(dateObj, new Date())) return false;
+  const now = new Date();
+  const [sh,sm] = startStr.split(":").map(Number);
+  const [eh,em] = endStr.split(":").map(Number);
+  const nowMin = now.getHours()*60+now.getMinutes();
+  return nowMin>=(sh*60+sm) && nowMin<=(eh*60+em);
+}
 
 /* Retorna as 5 datas (Segunda a Sexta) da semana que contém d */
 function getWeekDates(d){
@@ -599,6 +641,81 @@ function hideConfirmModal(){
 }
 
 /* ============================================================
+   AGENDA
+   ============================================================ */
+function renderAgendaCard(c, dateObj){
+  const s = SUBJECTS[c.subj];
+  const [startStr,endStr] = c.time.split("–").map(x=>x.trim());
+  const isNow = isNowInRange(dateObj, startStr, endStr);
+  const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+  const ICON_BUILDING = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>`;
+  const ICON_DOOR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a2 2 0 0 1 2-2h6l6 4v14"/><path d="M5 21h16M15 12v.01"/></svg>`;
+
+  return `
+    <div class="agenda-cls ${isNow?'now':''}">
+      ${isNow?'<span class="now-tag">AGORA</span>':''}
+      <div class="name">${s.emoji} ${s.name}</div>
+      <div class="type">${c.type}</div>
+      <div class="time">${ICON_CLOCK} ${c.time}</div>
+      <div class="room-row">
+        <div class="room-chip">
+          ${ICON_BUILDING}
+          <div><div class="rc-lbl">Bloco</div><div class="rc-val">${c.block}</div></div>
+        </div>
+        ${c.room?`<div class="room-chip">
+          ${ICON_DOOR}
+          <div><div class="rc-lbl">Sala</div><div class="rc-val">${c.room}</div></div>
+        </div>`:``}
+      </div>
+    </div>`;
+}
+
+function renderAgendaDay(){
+  renderDateBar();
+  const wd = current.getDay();
+  const classes = SCHEDULE.filter(c=>c.weekday===wd);
+  const box = document.getElementById("pageAgenda");
+
+  if(classes.length===0){
+    box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
+    return;
+  }
+
+  const todayFlag = isSameDay(current, new Date());
+  let html = `<div class="daygroup ${todayFlag?'is-today':''}">
+    <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
+  classes.forEach(c=>{ html += renderAgendaCard(c, current); });
+  html += `</div>`;
+  box.innerHTML = html;
+}
+
+function renderAgendaWeek(){
+  renderDateBar();
+  const box = document.getElementById("pageAgenda");
+  const days = getWeekDates(current);
+  const today = new Date();
+  let html = "";
+  let hasAnyClass = false;
+
+  days.forEach(d=>{
+    const wd = d.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd);
+    if(classes.length===0) return;
+    hasAnyClass = true;
+    const todayFlag = isSameDay(d, today);
+    html += `<div class="daygroup ${todayFlag?'is-today':''}">
+      <div class="dayhead">${WEEKDAY_NAMES[wd]} · ${fmtShort(d)} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
+    classes.forEach(c=>{ html += renderAgendaCard(c, d); });
+    html += `</div>`;
+  });
+
+  if(!hasAnyClass){
+    html = `<div class="empty-day">Nenhuma aula nesta semana.<br>Aproveite o descanso!</div>`;
+  }
+  box.innerHTML = html;
+}
+
+/* ============================================================
    PÁGINA 2 - ESTATÍSTICAS
    ============================================================ */
 function computeStats(){
@@ -702,16 +819,23 @@ function colorFor(pct,total){
 /* ============================================================
    NAVEGAÇÃO / TABS
    ============================================================ */
+const TAB_INFO = {
+  agenda:  {title:"Agenda",              sub:"Veja a aula e a sala de hoje",              hasDateWrap:true},
+  register:{title:"Registrar Frequência",sub:"Marque presença ou falta em cada aula",     hasDateWrap:true},
+  stats:   {title:"Estatísticas",        sub:"Seu desempenho em cada matéria",            hasDateWrap:false},
+};
+
 function switchTab(tab){
-  const isReg = tab==="register";
-  document.getElementById("pageRegister").classList.toggle("active",isReg);
-  document.getElementById("pageStats").classList.toggle("active",!isReg);
-  document.getElementById("tabRegister").classList.toggle("active",isReg);
-  document.getElementById("tabStats").classList.toggle("active",!isReg);
-  document.getElementById("dateWrap").style.display = isReg?"block":"none";
-  document.getElementById("hTitle").textContent = isReg?"Registrar Frequência":"Estatísticas";
-  document.getElementById("hSub").textContent = isReg?"Marque presença ou falta em cada aula":"Seu desempenho em cada matéria";
-  if(isReg){ viewMode==="week" ? renderWeek() : renderRegister(); } else renderStats();
+  activeTab = tab;
+  Object.keys(TAB_INFO).forEach(t=>{
+    document.getElementById("page"+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle("active", t===tab);
+    document.getElementById("tab"+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle("active", t===tab);
+  });
+  const info = TAB_INFO[tab];
+  document.getElementById("dateWrap").style.display = info.hasDateWrap?"block":"none";
+  document.getElementById("hTitle").textContent = info.title;
+  document.getElementById("hSub").textContent = info.sub;
+  renderCurrentView();
   window.scrollTo(0,0);
 }
 
@@ -719,7 +843,7 @@ function switchView(mode){
   viewMode = mode;
   document.getElementById("viewDay").classList.toggle("active", mode==="day");
   document.getElementById("viewWeek").classList.toggle("active", mode==="week");
-  mode==="week" ? renderWeek() : renderRegister();
+  renderCurrentView();
 }
 
 /* ============================================================
@@ -765,7 +889,11 @@ function toast(msg){
 /* ============================================================
    EVENTOS DE DATA
    ============================================================ */
-function renderCurrentView(){ viewMode==="week" ? renderWeek() : renderRegister(); }
+function renderCurrentView(){
+  if(activeTab==="stats"){ renderStats(); return; }
+  if(activeTab==="agenda"){ viewMode==="week" ? renderAgendaWeek() : renderAgendaDay(); return; }
+  viewMode==="week" ? renderWeek() : renderRegister();
+}
 
 document.getElementById("prevDay").onclick=()=>{current.setDate(current.getDate()-(viewMode==="week"?7:1));renderCurrentView();};
 document.getElementById("nextDay").onclick=()=>{current.setDate(current.getDate()+(viewMode==="week"?7:1));renderCurrentView();};
