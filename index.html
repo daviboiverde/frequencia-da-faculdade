@@ -75,9 +75,20 @@
   header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.2px}
   header .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
 
+  /* ===== VIEW TOGGLE ===== */
+  .viewToggle{
+    display:flex;gap:4px;background:var(--card2);border:1px solid var(--line);
+    border-radius:12px;padding:3px;margin-top:14px;
+  }
+  .viewToggle button{
+    flex:1;background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:700;
+    padding:8px;border-radius:9px;transition:background .15s,color .15s;
+  }
+  .viewToggle button.active{background:var(--accent);color:#0b0b14}
+
   /* ===== DATE BAR ===== */
   .datebar{
-    display:flex;align-items:center;gap:8px;margin-top:14px;
+    display:flex;align-items:center;gap:8px;margin-top:10px;
   }
   .datebar button{
     background:var(--card2);border:1px solid var(--line);color:var(--txt);
@@ -159,6 +170,37 @@
     background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);
   }
 
+  /* ===== PERFECT WEEK BUTTON ===== */
+  .perfect-week-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#fff;
+    padding:14px;border-radius:var(--radius);font-size:14px;font-weight:800;margin-bottom:18px;
+    box-shadow:0 8px 24px var(--accent-glow);transition:transform .12s var(--ease);
+  }
+  .perfect-week-btn svg{width:18px;height:18px}
+  .perfect-week-btn:active{transform:scale(.97)}
+
+  /* ===== CONFIRM MODAL ===== */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;z-index:80;
+    opacity:0;pointer-events:none;transition:opacity .2s var(--ease);
+  }
+  .modal-overlay.show{opacity:1;pointer-events:auto}
+  .modal-card{
+    background:var(--card);border:1px solid var(--line);border-radius:22px;
+    padding:32px 28px;text-align:center;max-width:280px;
+    transform:scale(.85);transition:transform .25s var(--ease);
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  .modal-overlay.show .modal-card{transform:scale(1)}
+  .modal-check{
+    width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,.15);color:var(--green);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+  }
+  .modal-title{font-size:17px;font-weight:800}
+  .modal-sub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.4}
+
   /* ===== STATS ===== */
   .overview{
     background:linear-gradient(155deg,rgba(94,106,210,.16) 0%,var(--card) 55%);
@@ -235,6 +277,10 @@
 
   <!-- Date bar (only on register page) -->
   <div id="dateWrap">
+    <div class="viewToggle">
+      <button id="viewDay" class="active" onclick="switchView('day')">Dia</button>
+      <button id="viewWeek" onclick="switchView('week')">Semana</button>
+    </div>
     <div class="datebar">
       <button id="prevDay">‹</button>
       <div class="dateinfo">
@@ -267,6 +313,16 @@
 </nav>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="confirmModal" onclick="hideConfirmModal()">
+  <div class="modal-card">
+    <div class="modal-check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <div class="modal-title" id="confirmTitle">Semana perfeita!</div>
+    <div class="modal-sub" id="confirmSub">Todas as aulas marcadas como presença.</div>
+  </div>
+</div>
 
 <script>
 /* ============================================================
@@ -311,6 +367,7 @@ const STORAGE_KEY = "freq_agronomia_v1";
 const SEED_FLAG = "freq_agronomia_v1_seeded";
 let records = {};
 let current = new Date();
+let viewMode = "day"; // "day" | "week"
 
 function load(){
   try{ records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
@@ -353,15 +410,40 @@ function keyOf(d){
 }
 function isSameDay(a,b){ return keyOf(a)===keyOf(b); }
 
+/* Retorna as 5 datas (Segunda a Sexta) da semana que contém d */
+function getWeekDates(d){
+  const wd = d.getDay(); // 0=Dom..6=Sáb
+  const mondayOffset = wd===0 ? -6 : 1-wd;
+  const monday = new Date(d);
+  monday.setDate(d.getDate()+mondayOffset);
+  const days = [];
+  for(let i=0;i<5;i++){
+    const dt = new Date(monday);
+    dt.setDate(monday.getDate()+i);
+    days.push(dt);
+  }
+  return days;
+}
+
 /* ============================================================
    PÁGINA 1 - REGISTRAR
    ============================================================ */
+function fmtShort(d){
+  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+}
+
 function renderDateBar(){
+  document.getElementById("datePicker").value = keyOf(current);
+  if(viewMode==="week"){
+    const days = getWeekDates(current);
+    document.getElementById("dDay").textContent = fmtShort(days[0])+" – "+fmtShort(days[4]);
+    document.getElementById("dWeek").textContent = "Semana";
+    return;
+  }
   const wd = current.getDay();
   document.getElementById("dDay").textContent =
     String(current.getDate()).padStart(2,"0")+"/"+String(current.getMonth()+1).padStart(2,"0")+"/"+current.getFullYear();
   document.getElementById("dWeek").textContent = WEEKDAY_NAMES[wd];
-  document.getElementById("datePicker").value = keyOf(current);
 }
 
 function renderRegister(){
@@ -398,9 +480,9 @@ function renderRegister(){
         <div class="type">${c.type}</div>
         <div class="time">${ICON_CLOCK} ${c.time}</div>
         <div class="btns">
-          <button class="${st==="P"?"sel-p":""}" onclick="mark('${c.id}','P')">${ICON_CHECK}Presente</button>
-          <button class="${st==="A"?"sel-a":""}" onclick="mark('${c.id}','A')">${ICON_X}Falta</button>
-          <button class="${st==="N"?"sel-n":""}" onclick="mark('${c.id}','N')">${ICON_BAN}Sem aula</button>
+          <button class="${st==="P"?"sel-p":""}" onclick="mark('${dayKey}','${c.id}','P')">${ICON_CHECK}Presente</button>
+          <button class="${st==="A"?"sel-a":""}" onclick="mark('${dayKey}','${c.id}','A')">${ICON_X}Falta</button>
+          <button class="${st==="N"?"sel-n":""}" onclick="mark('${dayKey}','${c.id}','N')">${ICON_BAN}Sem aula</button>
         </div>
       </div>`;
   });
@@ -408,8 +490,7 @@ function renderRegister(){
   box.innerHTML = html;
 }
 
-function mark(classId, status){
-  const dayKey = keyOf(current);
+function mark(dayKey, classId, status){
   if(!records[dayKey]) records[dayKey] = {};
   // toggle: se clicar de novo no mesmo, desmarca
   if(records[dayKey][classId]===status){
@@ -421,7 +502,100 @@ function mark(classId, status){
   }
   if(Object.keys(records[dayKey]).length===0) delete records[dayKey];
   save();
-  renderRegister();
+  if(viewMode==="week") renderWeek(); else renderRegister();
+}
+
+/* ============================================================
+   VISÃO SEMANAL
+   ============================================================ */
+function renderWeek(){
+  renderDateBar();
+  const box = document.getElementById("pageRegister");
+  const days = getWeekDates(current);
+  const today = new Date();
+
+  const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+  const ICON_BAN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`;
+  const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+  const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
+
+  let html = `
+    <button class="perfect-week-btn" onclick="markPerfectWeek()">${ICON_STAR}Marcar semana perfeita</button>`;
+
+  let hasAnyClass = false;
+  days.forEach(d=>{
+    const wd = d.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd);
+    if(classes.length===0) return;
+    hasAnyClass = true;
+    const dayKey = keyOf(d);
+    const dayRec = records[dayKey] || {};
+    const todayFlag = isSameDay(d, today);
+
+    html += `<div class="daygroup ${todayFlag?'is-today':''}">
+      <div class="dayhead">${WEEKDAY_NAMES[wd]} · ${fmtShort(d)} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
+
+    classes.forEach(c=>{
+      const s = SUBJECTS[c.subj];
+      const st = dayRec[c.id];
+      const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
+      const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":"";
+      html += `
+        <div class="cls ${cls}">
+          <span class="status-tag">${tag}</span>
+          <div class="name">${s.emoji} ${s.name}</div>
+          <div class="type">${c.type}</div>
+          <div class="time">${ICON_CLOCK} ${c.time}</div>
+          <div class="btns">
+            <button class="${st==="P"?"sel-p":""}" onclick="mark('${dayKey}','${c.id}','P')">${ICON_CHECK}Presente</button>
+            <button class="${st==="A"?"sel-a":""}" onclick="mark('${dayKey}','${c.id}','A')">${ICON_X}Falta</button>
+            <button class="${st==="N"?"sel-n":""}" onclick="mark('${dayKey}','${c.id}','N')">${ICON_BAN}Sem aula</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  if(!hasAnyClass){
+    html += `<div class="empty-day">Nenhuma aula nesta semana.<br>Aproveite o descanso!</div>`;
+  }
+
+  box.innerHTML = html;
+}
+
+function markPerfectWeek(){
+  const days = getWeekDates(current);
+  let count = 0;
+  days.forEach(d=>{
+    const wd = d.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd);
+    if(classes.length===0) return;
+    const dayKey = keyOf(d);
+    if(!records[dayKey]) records[dayKey] = {};
+    classes.forEach(c=>{
+      records[dayKey][c.id] = "P";
+      count++;
+    });
+  });
+  save();
+  renderWeek();
+  showConfirmModal("Semana perfeita!", `${count} aula(s) marcadas como presença, sem nenhuma falta.`);
+}
+
+/* ============================================================
+   MODAL DE CONFIRMAÇÃO
+   ============================================================ */
+let modalTimer;
+function showConfirmModal(title, sub){
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmSub").textContent = sub;
+  document.getElementById("confirmModal").classList.add("show");
+  clearTimeout(modalTimer);
+  modalTimer = setTimeout(hideConfirmModal, 2600);
+}
+function hideConfirmModal(){
+  document.getElementById("confirmModal").classList.remove("show");
 }
 
 /* ============================================================
@@ -537,8 +711,15 @@ function switchTab(tab){
   document.getElementById("dateWrap").style.display = isReg?"block":"none";
   document.getElementById("hTitle").textContent = isReg?"Registrar Frequência":"Estatísticas";
   document.getElementById("hSub").textContent = isReg?"Marque presença ou falta em cada aula":"Seu desempenho em cada matéria";
-  if(isReg) renderRegister(); else renderStats();
+  if(isReg){ viewMode==="week" ? renderWeek() : renderRegister(); } else renderStats();
   window.scrollTo(0,0);
+}
+
+function switchView(mode){
+  viewMode = mode;
+  document.getElementById("viewDay").classList.toggle("active", mode==="day");
+  document.getElementById("viewWeek").classList.toggle("active", mode==="week");
+  mode==="week" ? renderWeek() : renderRegister();
 }
 
 /* ============================================================
@@ -584,12 +765,14 @@ function toast(msg){
 /* ============================================================
    EVENTOS DE DATA
    ============================================================ */
-document.getElementById("prevDay").onclick=()=>{current.setDate(current.getDate()-1);renderRegister();};
-document.getElementById("nextDay").onclick=()=>{current.setDate(current.getDate()+1);renderRegister();};
-document.getElementById("goToday").onclick=()=>{current=new Date();renderRegister();toast("Hoje");};
+function renderCurrentView(){ viewMode==="week" ? renderWeek() : renderRegister(); }
+
+document.getElementById("prevDay").onclick=()=>{current.setDate(current.getDate()-(viewMode==="week"?7:1));renderCurrentView();};
+document.getElementById("nextDay").onclick=()=>{current.setDate(current.getDate()+(viewMode==="week"?7:1));renderCurrentView();};
+document.getElementById("goToday").onclick=()=>{current=new Date();renderCurrentView();toast("Hoje");};
 document.getElementById("datePicker").onchange=e=>{
   const [y,m,d]=e.target.value.split("-").map(Number);
-  current=new Date(y,m-1,d); renderRegister();
+  current=new Date(y,m-1,d); renderCurrentView();
 };
 
 /* ============================================================
