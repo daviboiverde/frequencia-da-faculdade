@@ -501,14 +501,16 @@ function renderRegister(){
     return;
   }
 
-  const todayFlag = isSameDay(current, new Date());
-  let html = `<div class="daygroup ${todayFlag?'is-today':''}">
-    <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
-
   const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
   const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
   const ICON_BAN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`;
   const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+  const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
+
+  const todayFlag = isSameDay(current, new Date());
+  let html = `<button class="perfect-week-btn" onclick="markPerfectDay()">${ICON_STAR}Marcar dia perfeito</button>`;
+  html += `<div class="daygroup ${todayFlag?'is-today':''}">
+    <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
 
   classes.forEach(c=>{
     const s = SUBJECTS[c.subj];
@@ -623,6 +625,18 @@ function markPerfectWeek(){
   save();
   renderWeek();
   showConfirmModal("Semana perfeita!", `${count} aula(s) marcadas como presença, sem nenhuma falta.`);
+}
+
+function markPerfectDay(){
+  const wd = current.getDay();
+  const classes = SCHEDULE.filter(c=>c.weekday===wd);
+  if(classes.length===0) return;
+  const dayKey = keyOf(current);
+  if(!records[dayKey]) records[dayKey] = {};
+  classes.forEach(c=>{ records[dayKey][c.id] = "P"; });
+  save();
+  renderRegister();
+  showConfirmModal("Dia perfeito!", `${classes.length} aula(s) marcadas como presença, sem nenhuma falta.`);
 }
 
 /* ============================================================
