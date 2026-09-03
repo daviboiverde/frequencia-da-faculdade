@@ -217,8 +217,10 @@
 
   .stat{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:15px 16px;margin-bottom:12px;
+    padding:15px 16px;margin-bottom:12px;transition:transform .12s var(--ease),border-color .15s;
   }
+  .stat:active{transform:scale(.98);border-color:var(--accent)}
+  .stat .tap-hint{font-size:10.5px;color:var(--muted);margin-top:10px;opacity:.7}
   .stat .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .stat .top .mname{font-size:15px;font-weight:700;line-height:1.3}
   .stat .top .pct{font-size:21px;font-weight:900;flex-shrink:0;font-variant-numeric:tabular-nums}
@@ -367,6 +369,41 @@
   }
   .exam-modal-actions .btn-cancel{background:var(--card2);color:var(--muted)}
   .exam-modal-actions .btn-save{background:var(--accent);border-color:var(--accent);color:#0b0b14}
+
+  /* ===== HISTORY MODAL ===== */
+  .history-modal-card{
+    background:var(--card);border:1px solid var(--line);border-radius:22px;
+    padding:22px;text-align:left;max-width:360px;width:100%;max-height:80vh;
+    display:flex;flex-direction:column;
+    transform:scale(.9);transition:transform .25s var(--ease);
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  .modal-overlay.show .history-modal-card{transform:scale(1)}
+  .history-modal-card h3{margin:0 0 4px;font-size:16px;font-weight:800}
+  .history-summary{display:flex;gap:8px;margin:14px 0}
+  .history-summary .hs-item{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 4px}
+  .history-summary .hs-num{font-size:17px;font-weight:800}
+  .history-summary .hs-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+  .history-list{overflow-y:auto;flex:1;margin:0 -4px;padding:0 4px}
+  .history-item{
+    display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .history-item:last-child{border-bottom:none}
+  .history-item .hi-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .history-item.present .hi-dot{background:var(--green)}
+  .history-item.absent .hi-dot{background:var(--red)}
+  .history-item.neutral .hi-dot{background:var(--muted)}
+  .history-item .hi-info{flex:1;min-width:0}
+  .history-item .hi-date{font-size:13.5px;font-weight:700}
+  .history-item .hi-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .history-item .hi-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;flex-shrink:0}
+  .history-item.present .hi-tag{background:rgba(34,197,94,.15);color:var(--green)}
+  .history-item.absent .hi-tag{background:rgba(239,68,68,.15);color:var(--red)}
+  .history-item.neutral .hi-tag{background:rgba(139,149,167,.18);color:var(--muted)}
+  .history-close-btn{
+    width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    padding:12px;border-radius:12px;font-size:13.5px;font-weight:700;margin-top:16px;flex-shrink:0;
+  }
 </style>
 </head>
 <body>
@@ -475,6 +512,15 @@
       <button type="button" class="btn-cancel" onclick="closeDeleteExamModal()">Cancelar</button>
       <button type="button" class="btn-save" style="background:var(--red);border-color:var(--red);color:#fff" onclick="confirmDeleteExam()">Excluir</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="historyModal" onclick="closeSubjectHistory()">
+  <div class="history-modal-card" onclick="event.stopPropagation()">
+    <h3 id="historyTitle">Matéria</h3>
+    <div class="history-summary" id="historySummary"></div>
+    <div class="history-list" id="historyList"></div>
+    <button type="button" class="history-close-btn" onclick="closeSubjectHistory()">Fechar</button>
   </div>
 </div>
 
@@ -1025,6 +1071,61 @@ function computeStats(){
   return acc;
 }
 
+/* ============================================================
+   HISTÓRICO POR MATÉRIA (quadros clicáveis das Estatísticas)
+   ============================================================ */
+function getSubjectHistory(subjKey){
+  const entries = [];
+  Object.entries(records).forEach(([dateKey,dayRec])=>{
+    Object.entries(dayRec).forEach(([classId,status])=>{
+      const cls = SCHEDULE.find(c=>c.id===classId);
+      if(!cls || cls.subj!==subjKey) return;
+      entries.push({date:dateKey, status, type:cls.type, time:cls.time});
+    });
+  });
+  entries.sort((a,b)=> b.date.localeCompare(a.date));
+  return entries;
+}
+
+function openSubjectHistory(subjKey){
+  const s = SUBJECTS[subjKey];
+  const entries = getSubjectHistory(subjKey);
+
+  document.getElementById("historyTitle").textContent = `${s.emoji} ${s.name}`;
+
+  const p = entries.filter(e=>e.status==="P").length;
+  const a = entries.filter(e=>e.status==="A").length;
+  const n = entries.filter(e=>e.status==="N").length;
+  document.getElementById("historySummary").innerHTML = `
+    <div class="hs-item"><div class="hs-num" style="color:var(--green)">${p}</div><div class="hs-lbl">Presenças</div></div>
+    <div class="hs-item"><div class="hs-num" style="color:var(--red)">${a}</div><div class="hs-lbl">Faltas</div></div>
+    <div class="hs-item"><div class="hs-num" style="color:var(--muted)">${n}</div><div class="hs-lbl">Sem aula</div></div>`;
+
+  const box = document.getElementById("historyList");
+  if(entries.length===0){
+    box.innerHTML = `<div class="empty-day">Nenhum registro ainda pra essa matéria.</div>`;
+  }else{
+    box.innerHTML = entries.map(e=>{
+      const cls = e.status==="P"?"present":e.status==="A"?"absent":"neutral";
+      const label = e.status==="P"?"Presente":e.status==="A"?"Falta":"Sem aula";
+      return `
+        <div class="history-item ${cls}">
+          <span class="hi-dot"></span>
+          <div class="hi-info">
+            <div class="hi-date">${fmtLong(e.date)}</div>
+            <div class="hi-meta">${e.type} · ${e.time}</div>
+          </div>
+          <span class="hi-tag">${label}</span>
+        </div>`;
+    }).join("");
+  }
+
+  document.getElementById("historyModal").classList.add("show");
+}
+function closeSubjectHistory(){
+  document.getElementById("historyModal").classList.remove("show");
+}
+
 function renderStats(){
   const acc = computeStats();
   const box = document.getElementById("pageStats");
@@ -1068,7 +1169,7 @@ function renderStats(){
     }
 
     html += `
-      <div class="stat">
+      <div class="stat" onclick="openSubjectHistory('${k}')">
         <div class="top">
           <div class="mname">${s.emoji} ${s.name}</div>
           <div class="pct" style="color:${color}">${total?pct.toFixed(0)+"%":"–"}</div>
@@ -1080,6 +1181,7 @@ function renderStats(){
         </div>
         <div class="situ ${situClass}">${situTxt}</div>
         ${total>0 && pct>=MIN_FREQ ? `<div class="meta" style="margin-top:8px"><span>Ainda pode faltar <b>${canMiss}</b> aula(s) seguindo assim</span></div>`:``}
+        <div class="tap-hint">Toque para ver o histórico</div>
       </div>`;
   });
 
