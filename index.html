@@ -545,6 +545,44 @@
   .dash-situation-grid .dsg-num{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
   .dash-situation-grid .dsg-lbl{font-size:10.5px;color:var(--muted);margin-top:4px}
 
+  /* ===== AGENDA · CALENDÁRIO SEMESTRAL ===== */
+  .cal-summary{
+    background:linear-gradient(155deg,rgba(94,106,210,.16) 0%,var(--card) 55%);
+    border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  }
+  .cal-summary h2{margin:0 0 12px;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  .cal-summary-grid{display:flex;gap:8px}
+  .cal-summary-item{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 4px}
+  .cal-summary-item .cs-num{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+  .cal-summary-item .cs-lbl{font-size:9.5px;color:var(--muted);margin-top:2px}
+
+  .cal-weekday-header{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px}
+  .cal-weekday-header span{text-align:center;font-size:9.5px;color:var(--muted);font-weight:700}
+
+  .cal-month-block{margin-bottom:16px}
+  .cal-month-title{font-size:13px;font-weight:800;color:var(--txt);margin:0 0 8px 2px;text-transform:capitalize}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cal-cell{
+    aspect-ratio:1;border-radius:4px;background:#23252f;cursor:pointer;
+    transition:transform .1s var(--ease);position:relative;
+  }
+  .cal-cell:active{transform:scale(.85)}
+  .cal-cell.blank{background:transparent;cursor:default;pointer-events:none}
+  .cal-cell.future{background:#000;border:1px solid var(--line)}
+  .cal-cell.norecord{background:#23252f}
+  .cal-cell.present{background:var(--green)}
+  .cal-cell.absent{background:var(--red)}
+  .cal-cell.justified{background:var(--blue)}
+  .cal-cell.noclass{background:#4b5568}
+  .cal-cell.holiday{box-shadow:0 0 0 2px #d4af37 inset}
+
+  .cal-legend{
+    display:flex;flex-wrap:wrap;gap:10px 14px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 16px;margin-top:4px;
+  }
+  .cal-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .cal-legend-item .cl-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -562,6 +600,7 @@
     <div class="viewToggle">
       <button id="viewDay" class="active" onclick="switchView('day')">Dia</button>
       <button id="viewWeek" onclick="switchView('week')">Semana</button>
+      <button id="viewCalendar" onclick="switchView('calendar')" style="display:none">Calendário</button>
     </div>
     <div class="datebar">
       <button id="prevDay">‹</button>
@@ -691,6 +730,14 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="calDayModal" onclick="closeCalendarDayModal()">
+  <div class="history-modal-card" onclick="event.stopPropagation()">
+    <h3 id="calDayModalTitle">Data</h3>
+    <div class="history-list" id="calDayList"></div>
+    <button type="button" class="history-close-btn" onclick="closeCalendarDayModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="importBackupModal" onclick="closeImportBackupModal()">
   <div class="exam-modal-card" onclick="event.stopPropagation()" style="text-align:center">
     <h3>Importar backup?</h3>
@@ -736,6 +783,7 @@ const SCHEDULE = [
 ];
 
 const WEEKDAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const MONTH_LABELS_PT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MIN_FREQ = 75;
 const HOURS_PER_CLASS = 2; // cada registro (presença/falta) equivale a 2 aulas/2h
 
@@ -745,6 +793,7 @@ const HOLIDAYS = [
   "2026-10-15", // Dia do Professor
   "2026-11-02", // Finados
 ];
+const SEMESTER_START = "2026-08-10"; // início oficial do semestre
 const SEMESTER_END = "2026-12-17"; // último dia de aula do semestre
 
 function isHoliday(d){
@@ -1498,6 +1547,159 @@ function renderAgendaWeek(){
 }
 
 /* ============================================================
+   AGENDA · CALENDÁRIO SEMESTRAL (estilo GitHub contributions)
+   ============================================================ */
+function renderAgendaCalendar(){
+  const box = document.getElementById("pageAgenda");
+  updateDateNavForView();
+
+  const [sy,sm,sd] = SEMESTER_START.split("-").map(Number);
+  const [ey,em,ed] = SEMESTER_END.split("-").map(Number);
+  const semStart = new Date(sy,sm-1,sd); semStart.setHours(0,0,0,0);
+  const semEnd = new Date(ey,em-1,ed); semEnd.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ---- resumo do semestre (reaproveita computeStats/computeStreak/colorFor) ----
+  const acc = computeStats();
+  let totP=0, totA=0;
+  Object.values(acc).forEach(v=>{ totP+=v.p; totA+=v.a; });
+  totP*=HOURS_PER_CLASS; totA*=HOURS_PER_CLASS;
+  const totTotal = totP+totA;
+  const totPct = totTotal ? (totP/totTotal*100) : 0;
+  const streak = computeStreak();
+
+  let html = `
+    <div class="cal-summary">
+      <h2>📅 Resumo do Semestre</h2>
+      <div class="cal-summary-grid">
+        <div class="cal-summary-item"><div class="cs-num" style="color:var(--green)">${totP}</div><div class="cs-lbl">✅ Presenças</div></div>
+        <div class="cal-summary-item"><div class="cs-num" style="color:var(--red)">${totA}</div><div class="cs-lbl">❌ Faltas</div></div>
+        <div class="cal-summary-item"><div class="cs-num" style="color:${colorFor(totPct,totTotal)}">${totTotal?Math.round(totPct)+"%":"–"}</div><div class="cs-lbl">🎓 Frequência</div></div>
+        <div class="cal-summary-item"><div class="cs-num" style="color:var(--yellow)">${streak}</div><div class="cs-lbl">🔥 Sequência</div></div>
+      </div>
+    </div>`;
+
+  html += `<div class="cal-weekday-header"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>`;
+
+  // ---- grade mês a mês, alinhada pelo dia da semana ----
+  let cursor = new Date(semStart.getFullYear(), semStart.getMonth(), 1);
+  const lastMonth = new Date(semEnd.getFullYear(), semEnd.getMonth(), 1);
+
+  while(cursor <= lastMonth){
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const firstWeekday = new Date(y, m, 1).getDay();
+
+    let cells = "";
+    for(let i=0;i<firstWeekday;i++) cells += `<div class="cal-cell blank"></div>`;
+
+    for(let day=1; day<=daysInMonth; day++){
+      const d = new Date(y, m, day);
+      if(d < semStart || d > semEnd){
+        cells += `<div class="cal-cell blank"></div>`;
+      }else{
+        cells += renderCalendarCell(d, today);
+      }
+    }
+
+    html += `
+      <div class="cal-month-block">
+        <div class="cal-month-title">${MONTH_LABELS_PT[m]}</div>
+        <div class="cal-grid">${cells}</div>
+      </div>`;
+
+    cursor.setMonth(cursor.getMonth()+1);
+  }
+
+  html += `
+    <div class="cal-legend">
+      <div class="cal-legend-item"><span class="cl-swatch" style="background:var(--green)"></span>Presença</div>
+      <div class="cal-legend-item"><span class="cl-swatch" style="background:var(--red)"></span>Falta</div>
+      <div class="cal-legend-item"><span class="cl-swatch" style="background:var(--blue)"></span>Justificada</div>
+      <div class="cal-legend-item"><span class="cl-swatch" style="background:#4b5568"></span>Sem aula</div>
+      <div class="cal-legend-item"><span class="cl-swatch" style="background:#000;border:1px solid var(--line)"></span>Futuro</div>
+      <div class="cal-legend-item"><span class="cl-swatch" style="box-shadow:0 0 0 2px #d4af37 inset;background:#23252f"></span>Feriado</div>
+    </div>`;
+
+  box.innerHTML = html;
+  staggerCalendarCells(box);
+}
+
+function renderCalendarCell(d, today){
+  const dateKey = keyOf(d);
+  const holiday = isHoliday(d);
+  const isFuture = d > today;
+  const dayRec = records[dateKey] || {};
+  const statuses = Object.values(dayRec);
+
+  let cls;
+  if(statuses.length===0){
+    cls = isFuture ? "future" : "norecord";
+  }else if(statuses.includes("A")){
+    cls = "absent";
+  }else if(statuses.includes("P")){
+    cls = "present";
+  }else if(statuses.includes("J")){
+    cls = "justified";
+  }else{
+    cls = "noclass"; // só "N" (sem aula)
+  }
+
+  const title = holiday ? "Feriado" : fmtLong(dateKey);
+  return `<div class="cal-cell ${cls} ${holiday?'holiday':''}" title="${title}" onclick="openCalendarDayModal('${dateKey}')"></div>`;
+}
+
+function staggerCalendarCells(box){
+  const cells = box.querySelectorAll(".cal-cell:not(.blank)");
+  const chrome = box.querySelectorAll(".cal-summary, .cal-legend");
+  gsap.killTweensOf(cells);
+  gsap.killTweensOf(chrome);
+  gsap.from(chrome, {opacity:0, y:14, duration:.35, ease:"power2.out"});
+  if(cells.length){
+    gsap.from(cells, {opacity:0, scale:.4, duration:.4, stagger:{each:.006, from:"start"}, ease:"power2.out"});
+  }
+}
+
+function openCalendarDayModal(dateKey){
+  const [y,m,d] = dateKey.split("-").map(Number);
+  const dateObj = new Date(y,m-1,d);
+  document.getElementById("calDayModalTitle").textContent = fmtLong(dateKey);
+
+  const box = document.getElementById("calDayList");
+  if(isHoliday(dateObj)){
+    box.innerHTML = `<div class="empty-day">🎉 Feriado — sem aula.</div>`;
+  }else{
+    const wd = dateObj.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd);
+    if(classes.length===0){
+      box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.</div>`;
+    }else{
+      const dayRec = records[dateKey] || {};
+      box.innerHTML = classes.map(c=>{
+        const s = SUBJECTS[c.subj];
+        const st = dayRec[c.id];
+        const clsName = st ? STATUS_CLASS_NAME[st] : "neutral";
+        const label = st ? STATUS_LABEL_PT[st] : "Sem registro";
+        return `
+          <div class="history-item ${clsName}">
+            <span class="hi-dot"></span>
+            <div class="hi-info">
+              <div class="hi-date">${s.emoji} ${s.name}</div>
+              <div class="hi-meta">${c.type} · ${c.time}</div>
+            </div>
+            <span class="hi-tag">${label}</span>
+          </div>`;
+      }).join("");
+    }
+  }
+  staggerIn(box, ".history-item, .empty-day");
+  openModal("calDayModal");
+}
+function closeCalendarDayModal(){
+  closeModal("calDayModal");
+}
+
+/* ============================================================
    PÁGINA 2 - ESTATÍSTICAS
    ============================================================ */
 function computeStats(){
@@ -1804,7 +2006,6 @@ function renderDashboard(){
   html += `</div>`;
 
   // ----- Card 5: Semestre -----
-  const SEMESTER_START = "2026-08-10";
   const [sy,sm,sd] = SEMESTER_START.split("-").map(Number);
   const [ey2,em2,ed2] = SEMESTER_END.split("-").map(Number);
   const semStart = new Date(sy,sm-1,sd); semStart.setHours(0,0,0,0);
@@ -2029,6 +2230,16 @@ function switchTab(tab){
   });
   const info = TAB_INFO[tab];
   document.getElementById("dateWrap").style.display = info.hasDateWrap?"block":"none";
+
+  // "Calendário" só existe dentro da Agenda; some das outras abas (Registrar inclusive)
+  document.getElementById("viewCalendar").style.display = tab==="agenda" ? "" : "none";
+  if(tab!=="agenda" && viewMode==="calendar"){
+    viewMode = "day";
+    document.getElementById("viewDay").classList.add("active");
+    document.getElementById("viewWeek").classList.remove("active");
+    document.getElementById("viewCalendar").classList.remove("active");
+  }
+  updateDateNavForView();
   if(info.hasDateWrap) renderNextClassWidget();
   else document.getElementById("nextClassWidget").classList.remove("show");
   const hTitle = document.getElementById("hTitle");
@@ -2078,10 +2289,21 @@ function switchView(mode){
   viewMode = mode;
   document.getElementById("viewDay").classList.toggle("active", mode==="day");
   document.getElementById("viewWeek").classList.toggle("active", mode==="week");
-  const activeBtn = document.getElementById(mode==="day"?"viewDay":"viewWeek");
+  document.getElementById("viewCalendar").classList.toggle("active", mode==="calendar");
+  const activeBtn = document.getElementById(mode==="day"?"viewDay":mode==="week"?"viewWeek":"viewCalendar");
   gsap.killTweensOf(activeBtn);
   gsap.fromTo(activeBtn, {scale:.92}, {scale:1, duration:.35, ease:"back.out(3)"});
+  updateDateNavForView();
   renderCurrentView();
+}
+
+/* Esconde navegação de dia/semana (setas, data, "ir para hoje") quando o Calendário está ativo */
+function updateDateNavForView(){
+  const isCal = activeTab==="agenda" && viewMode==="calendar";
+  const datebar = document.querySelector(".datebar");
+  const todayBtn = document.querySelector(".today-btn");
+  if(datebar) datebar.style.display = isCal ? "none" : "";
+  if(todayBtn) todayBtn.style.display = isCal ? "none" : "";
 }
 
 /* ============================================================
@@ -2362,7 +2584,11 @@ function renderCurrentView(){
   if(activeTab==="dashboard"){ renderDashboard(); return; }
   if(activeTab==="stats"){ renderStats(); return; }
   if(activeTab==="exams"){ renderExams(); return; }
-  if(activeTab==="agenda"){ viewMode==="week" ? renderAgendaWeek() : renderAgendaDay(); return; }
+  if(activeTab==="agenda"){
+    if(viewMode==="calendar"){ renderAgendaCalendar(); return; }
+    viewMode==="week" ? renderAgendaWeek() : renderAgendaDay();
+    return;
+  }
   viewMode==="week" ? renderWeek() : renderRegister();
 }
 
