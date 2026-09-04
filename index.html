@@ -791,12 +791,27 @@ function renderNextClassWidget(){
   const widget = document.getElementById("nextClassWidget");
   if(!widget) return;
   const info = getNextClass();
-  if(!info){ widget.classList.remove("show"); widget.innerHTML=""; return; }
+  const wasVisible = widget.classList.contains("show");
+
+  gsap.killTweensOf(widget);
+
+  if(!info){
+    if(wasVisible){
+      gsap.to(widget, {opacity:0, y:-8, duration:.3, ease:"power2.out", onComplete:()=>{
+        widget.classList.remove("show");
+        widget.innerHTML = "";
+      }});
+    }else{
+      widget.classList.remove("show");
+      widget.innerHTML = "";
+    }
+    return;
+  }
 
   const s = SUBJECTS[info.cls.subj];
   const roomTxt = info.cls.room ? `${info.cls.block} · ${info.cls.room}` : info.cls.block;
   const ICON_BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>`;
-  widget.innerHTML = `
+  const newHtml = `
     <div class="ncw-icon">${ICON_BOLT}</div>
     <div class="ncw-info">
       <div class="ncw-label">Próxima aula</div>
@@ -804,7 +819,17 @@ function renderNextClassWidget(){
       <div class="ncw-meta">${info.cls.time} · ${roomTxt}</div>
     </div>
     <div class="ncw-countdown">${formatNextClassCountdown(info)}</div>`;
-  widget.classList.add("show");
+
+  if(!wasVisible){
+    widget.innerHTML = newHtml;
+    widget.classList.add("show");
+    gsap.fromTo(widget, {opacity:0, y:10}, {opacity:1, y:0, duration:.35, ease:"power2.out"});
+  }else{
+    gsap.to(widget, {opacity:0, duration:.15, ease:"power2.out", onComplete:()=>{
+      widget.innerHTML = newHtml;
+      gsap.to(widget, {opacity:1, duration:.2, ease:"power2.out"});
+    }});
+  }
 }
 
 /* ============================================================
