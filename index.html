@@ -386,6 +386,64 @@
   .exam-card .card-actions button svg{width:15px;height:15px}
   .exam-card .card-actions .edit-btn:active{color:var(--accent)}
   .exam-card .card-actions .del-btn:active{color:var(--red)}
+  .exam-card.c-done{box-shadow:inset 3px 0 0 var(--muted);opacity:.65}
+  .exam-card .score-badge{
+    display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;
+    margin-top:6px;margin-left:6px;background:rgba(94,106,210,.18);color:var(--accent);
+  }
+
+  /* ===== PROVAS · CENTRAL ACADÊMICA ===== */
+  .exams-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+  .exams-summary .es-item{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .exams-summary .es-icon{font-size:20px;flex-shrink:0}
+  .exams-summary .es-num{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .exams-summary .es-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+
+  .exams-highlight{
+    background:linear-gradient(135deg,rgba(94,106,210,.28),rgba(94,106,210,.06));
+    border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  }
+  .exams-highlight h2{margin:0 0 12px;font-size:12.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;font-weight:800}
+  .exams-highlight .eh-name{font-size:17px;font-weight:800}
+  .exams-highlight .eh-type{font-size:12px;color:var(--muted);margin-top:3px}
+  .exams-highlight .eh-date{font-size:13px;color:var(--txt);margin-top:8px;font-weight:600}
+  .exams-highlight .eh-countdown{font-size:20px;font-weight:900;color:var(--accent);margin-top:6px}
+  .exams-highlight .eh-note{font-size:12.5px;color:var(--muted);margin-top:8px;font-style:italic}
+
+  .exams-toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .exams-filters{display:flex;gap:8px}
+  .exams-filters button{
+    flex:1;background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    padding:9px;border-radius:12px;font-size:12.5px;font-weight:700;transition:.15s;
+  }
+  .exams-filters button.active{background:rgba(94,106,210,.18);border-color:var(--accent);color:var(--accent)}
+  .exams-search{position:relative}
+  .exams-search input{
+    width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    padding:11px 12px 11px 38px;border-radius:12px;font-size:14px;font-family:inherit;
+  }
+  .exams-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+
+  .exam-group{margin-bottom:20px}
+  .exam-group-title{
+    font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.5px;margin:0 2px 10px;
+  }
+
+  .exams-avg-section{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:16px;
+  }
+  .exams-avg-section h2{margin:0 0 12px;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  .exams-avg-row{
+    display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);
+  }
+  .exams-avg-row:last-child{border-bottom:none}
+  .exams-avg-row .ea-name{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .exams-avg-row .ea-val{font-size:15px;font-weight:800;color:var(--accent);flex-shrink:0}
 
   /* ===== EXAM MODAL (form) ===== */
   .exam-modal-card{
@@ -694,6 +752,10 @@
     <div class="field">
       <label for="examNote">Observação (opcional)</label>
       <input type="text" id="examNote" placeholder="Ex: capítulos 1 a 4">
+    </div>
+    <div class="field">
+      <label for="examScore">Nota (opcional)</label>
+      <input type="text" id="examScore" inputmode="decimal" placeholder="Ex: 8,5">
     </div>
     <div class="exam-modal-actions">
       <button type="button" class="btn-cancel" onclick="closeExamModal()">Cancelar</button>
@@ -1293,50 +1355,208 @@ function countdownLabel(diff){
   return `Em ${diff} dias`;
 }
 
-/* Semáforo de prioridade: <=3 dias = vermelho, 4-10 dias = amarelo, >10 dias = verde */
+/* Semáforo de prioridade: concluída = cinza, <=7 dias = vermelho, 8-15 = amarelo, >15 = verde */
 function examColorClass(diff){
-  if(diff<=3) return "c-red";
-  if(diff<=10) return "c-yellow";
+  if(diff<0) return "c-done";
+  if(diff<=7) return "c-red";
+  if(diff<=15) return "c-yellow";
   return "c-green";
+}
+
+/* Agrupamento da central acadêmica: esta semana / próximos 15 dias / futuras / concluídas */
+function examGroupKey(diff){
+  if(diff<0) return "done";
+  if(diff<=7) return "week";
+  if(diff<=15) return "soon";
+  return "future";
+}
+const EXAM_GROUP_META = {
+  week:  {title:"🔴 Esta Semana"},
+  soon:  {title:"🟡 Próximos 15 Dias"},
+  future:{title:"🟢 Futuras"},
+  done:  {title:"✅ Concluídas"},
+};
+const EXAM_GROUP_ORDER = ["week","soon","future","done"];
+
+function parseScoreStr(str){
+  if(str===undefined || str===null || str==="") return null;
+  const n = parseFloat(String(str).replace(",","."));
+  return isNaN(n) ? null : n;
+}
+function formatScore(n){
+  return n.toFixed(2).replace(/\.?0+$/,"").replace(".",",") || "0";
+}
+
+function computeSubjectAverages(){
+  const sums = {};
+  exams.forEach(ex=>{
+    const n = parseScoreStr(ex.score);
+    if(n===null) return;
+    if(!sums[ex.subj]) sums[ex.subj] = {total:0, count:0};
+    sums[ex.subj].total += n;
+    sums[ex.subj].count++;
+  });
+  return Object.keys(sums).map(k=>({
+    subj:k, s:SUBJECTS[k], avg: sums[k].total/sums[k].count
+  }));
+}
+
+let examFilter = "all"; // "all" | "prova" | "atividade"
+let examSearchQuery = "";
+
+function matchesExamFilter(ex){
+  if(examFilter!=="all" && ex.type!==examFilter) return false;
+  if(examSearchQuery){
+    const s = SUBJECTS[ex.subj];
+    const name = s ? s.name.toLowerCase() : "";
+    if(!name.includes(examSearchQuery.trim().toLowerCase())) return false;
+  }
+  return true;
+}
+
+function setExamFilter(filter){
+  examFilter = filter;
+  ["all","prova","atividade"].forEach(f=>{
+    document.getElementById("examFilter-"+f).classList.toggle("active", f===filter);
+  });
+  renderExamsGroups();
+}
+
+function onExamSearchInput(value){
+  examSearchQuery = value;
+  renderExamsGroups();
+}
+
+const EXAM_ICON_CAL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg>`;
+const EXAM_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+const EXAM_ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>`;
+
+function renderExamCard(ex){
+  const s = SUBJECTS[ex.subj];
+  const diff = daysUntil(ex.date);
+  const colorClass = examColorClass(diff);
+  const scoreN = parseScoreStr(ex.score);
+  const countdownTxt = diff<0 ? "✅ Realizada" : `⏳ ${countdownLabel(diff)}`;
+  return `
+    <div class="exam-card ${colorClass}" id="exam-card-${ex.id}">
+      <span class="countdown ${colorClass}"><span class="dot"></span>${countdownTxt}</span>
+      <div class="name">${s?s.emoji+" "+s.name:"Matéria"}</div>
+      <span class="type-badge ${ex.type}">${EXAM_TYPES[ex.type]}</span>
+      ${scoreN!==null?`<span class="score-badge">Nota: ${formatScore(scoreN)}</span>`:``}
+      <div class="exam-date">${EXAM_ICON_CAL} ${fmtLong(ex.date)}</div>
+      ${ex.note?`<div class="note">${ex.note}</div>`:``}
+      <div class="card-actions">
+        <button class="edit-btn" onclick="openExamModal('${ex.id}')">${EXAM_ICON_EDIT}</button>
+        <button class="del-btn" onclick="deleteExam('${ex.id}')">${EXAM_ICON_TRASH}</button>
+      </div>
+    </div>`;
+}
+
+function renderExamsGroups(){
+  const box = document.getElementById("examsGroups");
+  if(!box) return;
+
+  const filtered = exams.filter(matchesExamFilter);
+  if(exams.length===0){
+    box.innerHTML = `<div class="empty-day">Nenhuma prova cadastrada.<br>Toque no botão acima pra criar um lembrete.</div>`;
+    staggerIn(box, ".empty-day");
+    return;
+  }
+  if(filtered.length===0){
+    box.innerHTML = `<div class="empty-day">Nenhuma avaliação encontrada com esse filtro/busca.</div>`;
+    staggerIn(box, ".empty-day");
+    return;
+  }
+
+  const groups = {week:[], soon:[], future:[], done:[]};
+  filtered.forEach(ex=> groups[examGroupKey(daysUntil(ex.date))].push(ex));
+
+  let html = "";
+  EXAM_GROUP_ORDER.forEach(key=>{
+    const list = groups[key];
+    if(list.length===0) return;
+    list.sort((a,b)=> key==="done" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
+    html += `<div class="exam-group">
+      <div class="exam-group-title">${EXAM_GROUP_META[key].title}</div>
+      ${list.map(renderExamCard).join("")}
+    </div>`;
+  });
+
+  box.innerHTML = html;
+  staggerIn(box, ".exam-card");
 }
 
 function renderExams(){
   const box = document.getElementById("pageExams");
   const ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`;
-  const ICON_CAL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg>`;
-  const ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>`;
-  const ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+  const ICON_SEARCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`;
 
-  let html = `<button class="add-exam-btn" onclick="openExamModal()">${ICON_PLUS}Nova prova / atividade</button>`;
+  // ----- Resumo -----
+  const total = exams.length;
+  const inWeek = exams.filter(ex=> examGroupKey(daysUntil(ex.date))==="week").length;
+  const in15 = exams.filter(ex=> examGroupKey(daysUntil(ex.date))==="soon").length;
+  const done = exams.filter(ex=> daysUntil(ex.date)<0).length;
 
-  if(exams.length===0){
-    html += `<div class="empty-day">Nenhuma prova cadastrada.<br>Toque no botão acima pra criar um lembrete.</div>`;
-    box.innerHTML = html;
-    staggerIn(box, ".empty-day");
-    return;
-  }
+  let html = `
+    <div class="exams-summary">
+      <div class="es-item"><div class="es-icon">📚</div><div><div class="es-num">${total}</div><div class="es-lbl">Total cadastradas</div></div></div>
+      <div class="es-item"><div class="es-icon">🔴</div><div><div class="es-num">${inWeek}</div><div class="es-lbl">Próx. 7 dias</div></div></div>
+      <div class="es-item"><div class="es-icon">🟡</div><div><div class="es-num">${in15}</div><div class="es-lbl">Próx. 15 dias</div></div></div>
+      <div class="es-item"><div class="es-icon">✅</div><div><div class="es-num">${done}</div><div class="es-lbl">Concluídas</div></div></div>
+    </div>`;
 
-  const sorted = [...exams].sort((a,b)=> a.date.localeCompare(b.date));
-  sorted.forEach(ex=>{
+  // ----- Próxima avaliação em destaque -----
+  const upcoming = exams.filter(ex=>daysUntil(ex.date)>=0).sort((a,b)=>a.date.localeCompare(b.date));
+  if(upcoming.length>0){
+    const ex = upcoming[0];
     const s = SUBJECTS[ex.subj];
     const diff = daysUntil(ex.date);
-    const colorClass = examColorClass(diff);
     html += `
-      <div class="exam-card ${colorClass}" id="exam-card-${ex.id}">
-        <span class="countdown ${colorClass}"><span class="dot"></span>${countdownLabel(diff)}</span>
-        <div class="name">${s?s.emoji+" "+s.name:"Matéria"}</div>
-        <span class="type-badge ${ex.type}">${EXAM_TYPES[ex.type]}</span>
-        <div class="exam-date">${ICON_CAL} ${fmtLong(ex.date)}</div>
-        ${ex.note?`<div class="note">${ex.note}</div>`:``}
-        <div class="card-actions">
-          <button class="edit-btn" onclick="openExamModal('${ex.id}')">${ICON_EDIT}</button>
-          <button class="del-btn" onclick="deleteExam('${ex.id}')">${ICON_TRASH}</button>
-        </div>
+      <div class="exams-highlight">
+        <h2>🎯 Próxima Avaliação</h2>
+        <div class="eh-name">${s?s.emoji+" "+s.name:"Matéria"}</div>
+        <div class="eh-type">${EXAM_TYPES[ex.type]}</div>
+        <div class="eh-date">${fmtLong(ex.date)}</div>
+        <div class="eh-countdown">${countdownLabel(diff)}</div>
+        ${ex.note?`<div class="eh-note">${ex.note}</div>`:``}
       </div>`;
-  });
+  }
+
+  // ----- Toolbar: novo + filtros + busca -----
+  html += `<button class="add-exam-btn" onclick="openExamModal()">${ICON_PLUS}Nova prova / atividade</button>`;
+  html += `
+    <div class="exams-toolbar">
+      <div class="exams-filters">
+        <button id="examFilter-all" class="${examFilter==='all'?'active':''}" onclick="setExamFilter('all')">Todas</button>
+        <button id="examFilter-prova" class="${examFilter==='prova'?'active':''}" onclick="setExamFilter('prova')">Provas</button>
+        <button id="examFilter-atividade" class="${examFilter==='atividade'?'active':''}" onclick="setExamFilter('atividade')">Atividades</button>
+      </div>
+      <div class="exams-search">
+        ${ICON_SEARCH}
+        <input type="text" placeholder="Pesquisar matéria" value="${examSearchQuery.replace(/"/g,'&quot;')}" oninput="onExamSearchInput(this.value)">
+      </div>
+    </div>`;
+
+  // ----- Listagem agrupada -----
+  html += `<div id="examsGroups"></div>`;
+
+  // ----- Desempenho acadêmico (médias por matéria) -----
+  const averages = computeSubjectAverages();
+  if(averages.length>0){
+    html += `
+      <div class="exams-avg-section">
+        <h2>📈 Desempenho Acadêmico</h2>
+        ${averages.map(a=>`
+          <div class="exams-avg-row">
+            <div class="ea-name">${a.s.emoji} ${a.s.name}</div>
+            <div class="ea-val">${formatScore(a.avg)}</div>
+          </div>`).join("")}
+      </div>`;
+  }
 
   box.innerHTML = html;
-  staggerIn(box, ".exam-card");
+  staggerIn(box, ".exams-summary, .exams-highlight, .exams-toolbar, .exams-avg-section");
+  renderExamsGroups();
 }
 
 function populateExamSubjSelect(){
@@ -1367,12 +1587,14 @@ function openExamModal(id){
     document.getElementById("examSubj").value = editing.subj;
     document.getElementById("examDate").value = editing.date;
     document.getElementById("examNote").value = editing.note || "";
+    document.getElementById("examScore").value = editing.score || "";
     setExamType(editing.type);
   }else{
     document.getElementById("examModalTitle").textContent = "Nova prova / atividade";
     document.getElementById("examSaveBtn").textContent = "Salvar";
     document.getElementById("examDate").value = keyOf(new Date());
     document.getElementById("examNote").value = "";
+    document.getElementById("examScore").value = "";
     setExamType("prova");
   }
   openModal("examModal");
@@ -1385,12 +1607,13 @@ function saveExam(){
   const subj = document.getElementById("examSubj").value;
   const date = document.getElementById("examDate").value;
   const note = document.getElementById("examNote").value.trim();
+  const score = document.getElementById("examScore").value.trim();
   if(!date){ toast("Escolha uma data"); return; }
 
   const s = SUBJECTS[subj];
   if(editingExamId){
     const ex = exams.find(e=>e.id===editingExamId);
-    ex.subj = subj; ex.date = date; ex.type = examTypeSel; ex.note = note;
+    ex.subj = subj; ex.date = date; ex.type = examTypeSel; ex.note = note; ex.score = score;
     saveExams();
     closeExamModal();
 
@@ -1401,7 +1624,7 @@ function saveExam(){
 
     showConfirmModal("Lembrete atualizado!", `${EXAM_TYPES[examTypeSel]} de ${s.name} em ${fmtLong(date)}.`);
   }else{
-    exams.push({id:Date.now().toString(), subj, date, type:examTypeSel, note});
+    exams.push({id:Date.now().toString(), subj, date, type:examTypeSel, note, score});
     saveExams();
     closeExamModal();
     renderExams();
