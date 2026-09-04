@@ -140,7 +140,7 @@
   .cls .type{font-size:11.5px;color:var(--muted);margin-top:3px}
   .cls .time{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px}
   .cls .time svg{width:13px;height:13px;flex-shrink:0}
-  .cls .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}
+  .cls .btns{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
   .cls .btns button{
     border:1px solid var(--line);background:var(--card2);color:var(--muted);
     padding:10px 4px;border-radius:12px;font-size:11.5px;font-weight:700;
@@ -153,9 +153,11 @@
   .cls.present{box-shadow:inset 3px 0 0 var(--green)}
   .cls.absent{box-shadow:inset 3px 0 0 var(--red)}
   .cls.neutral{box-shadow:inset 3px 0 0 var(--muted)}
+  .cls.justified{box-shadow:inset 3px 0 0 var(--blue)}
   .cls .btns button.sel-p{background:rgba(34,197,94,.14);border-color:var(--green);color:var(--green)}
   .cls .btns button.sel-a{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
   .cls .btns button.sel-n{background:rgba(138,143,152,.14);border-color:var(--muted);color:var(--txt)}
+  .cls .btns button.sel-j{background:rgba(59,130,246,.14);border-color:var(--blue);color:var(--blue)}
   .cls .status-tag{
     position:absolute;top:14px;right:15px;font-size:10.5px;font-weight:800;
     padding:3px 9px;border-radius:999px;display:none;letter-spacing:.2px;
@@ -163,6 +165,7 @@
   .cls.present .status-tag{display:inline-block;background:rgba(34,197,94,.15);color:var(--green)}
   .cls.absent .status-tag{display:inline-block;background:rgba(239,68,68,.15);color:var(--red)}
   .cls.neutral .status-tag{display:inline-block;background:rgba(139,149,167,.18);color:var(--muted)}
+  .cls.justified .status-tag{display:inline-block;background:rgba(59,130,246,.15);color:var(--blue)}
 
   .empty-day{
     text-align:center;color:var(--muted);font-size:13px;padding:32px 10px;
@@ -211,6 +214,22 @@
   .ov-big{font-size:36px;font-weight:900;text-align:center;margin:4px 0 4px;font-variant-numeric:tabular-nums}
   .ov-big small{font-size:15px;color:var(--muted);font-weight:600}
 
+  .streak-badge{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(239,68,68,.12));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px;margin-bottom:18px;font-size:13.5px;font-weight:800;color:var(--txt);
+  }
+
+  .weekday-chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+  .weekday-chart h2{margin:0 0 14px;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  .wd-bars{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;height:110px}
+  .wd-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .wd-bar-track{width:100%;max-width:34px;flex:1;display:flex;align-items:flex-end;background:var(--card2);border-radius:8px;overflow:hidden}
+  .wd-bar-fill{width:100%;background:linear-gradient(180deg,var(--red),var(--accent2));border-radius:8px;min-height:2px}
+  .wd-bar-val{font-size:12px;font-weight:800;margin-top:6px}
+  .wd-bar-lbl{font-size:10.5px;color:var(--muted);margin-top:2px}
+
   .stat{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:15px 16px;margin-bottom:12px;transition:transform .12s var(--ease),border-color .15s;
@@ -254,9 +273,17 @@
   /* ===== TOAST ===== */
   .toast{
     position:fixed;bottom:96px;left:50%;
+    display:flex;align-items:center;gap:12px;
     background:var(--txt);color:#0b0b0d;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;
-    opacity:0;pointer-events:none;z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);max-width:88vw;
   }
+  .toast.show{pointer-events:auto}
+  .toast.warn{background:var(--red);color:#fff}
+  .toast-action-btn{
+    background:none;border:none;color:var(--accent2);font-weight:800;font-size:13px;padding:0;
+    flex-shrink:0;white-space:nowrap;
+  }
+  .toast.warn .toast-action-btn{color:#fff;text-decoration:underline}
 
   /* ===== TOOLS ===== */
   .tools{display:flex;gap:9px;margin-top:6px}
@@ -383,10 +410,12 @@
     display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);
   }
   .history-item:last-child{border-bottom:none}
+  .history-item{cursor:pointer}
   .history-item .hi-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
   .history-item.present .hi-dot{background:var(--green)}
   .history-item.absent .hi-dot{background:var(--red)}
   .history-item.neutral .hi-dot{background:var(--muted)}
+  .history-item.justified .hi-dot{background:var(--blue)}
   .history-item .hi-info{flex:1;min-width:0}
   .history-item .hi-date{font-size:13.5px;font-weight:700}
   .history-item .hi-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -394,10 +423,43 @@
   .history-item.present .hi-tag{background:rgba(34,197,94,.15);color:var(--green)}
   .history-item.absent .hi-tag{background:rgba(239,68,68,.15);color:var(--red)}
   .history-item.neutral .hi-tag{background:rgba(139,149,167,.18);color:var(--muted)}
+  .history-item.justified .hi-tag{background:rgba(59,130,246,.15);color:var(--blue)}
+  .history-item .hi-edit{display:none;gap:5px;flex-shrink:0}
+  .history-item.editing .hi-tag{display:none}
+  .history-item.editing .hi-edit{display:flex}
+  .hi-edit button{
+    background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    transition:transform .12s var(--ease);
+  }
+  .hi-edit button svg{width:14px;height:14px}
+  .hi-edit button:active{transform:scale(.9)}
+  .hi-edit button.is-current.p{background:rgba(34,197,94,.18);border-color:var(--green);color:var(--green)}
+  .hi-edit button.is-current.a{background:rgba(239,68,68,.18);border-color:var(--red);color:var(--red)}
+  .hi-edit button.is-current.n{background:rgba(138,143,152,.18);border-color:var(--muted);color:var(--txt)}
+  .hi-edit button.is-current.j{background:rgba(59,130,246,.18);border-color:var(--blue);color:var(--blue)}
   .history-close-btn{
     width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
     padding:12px;border-radius:12px;font-size:13.5px;font-weight:700;margin-top:16px;flex-shrink:0;
   }
+
+  /* ===== PRÓXIMA AULA ===== */
+  .next-class-widget{
+    display:none;align-items:center;gap:12px;margin-top:12px;
+    background:linear-gradient(135deg,rgba(94,106,210,.22),rgba(94,106,210,.06));
+    border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;
+  }
+  .next-class-widget.show{display:flex}
+  .next-class-widget .ncw-icon{
+    width:38px;height:38px;border-radius:12px;background:rgba(94,106,210,.22);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .next-class-widget .ncw-icon svg{width:19px;height:19px}
+  .next-class-widget .ncw-info{flex:1;min-width:0}
+  .next-class-widget .ncw-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .next-class-widget .ncw-name{font-size:13.5px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .next-class-widget .ncw-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .next-class-widget .ncw-countdown{font-size:12.5px;font-weight:800;color:var(--accent);flex-shrink:0;text-align:right;white-space:nowrap}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -428,6 +490,7 @@
     </div>
     <div class="today-btn"><button id="goToday">Ir para hoje</button></div>
   </div>
+  <div class="next-class-widget" id="nextClassWidget"></div>
 </header>
 
 <!-- ===== PAGE -1: PROVAS ===== -->
@@ -463,7 +526,10 @@
   </button>
 </nav>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastAction" class="toast-action-btn" style="display:none"></button>
+</div>
 
 <div class="modal-overlay" id="confirmModal" onclick="hideConfirmModal()">
   <div class="modal-card">
@@ -524,6 +590,17 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="importBackupModal" onclick="closeImportBackupModal()">
+  <div class="exam-modal-card" onclick="event.stopPropagation()" style="text-align:center">
+    <h3>Importar backup?</h3>
+    <div class="modal-sub" style="margin-bottom:4px">Isso vai substituir todos os registros e provas atuais. Essa ação não pode ser desfeita.</div>
+    <div class="exam-modal-actions">
+      <button type="button" class="btn-cancel" onclick="closeImportBackupModal()">Cancelar</button>
+      <button type="button" class="btn-save" style="background:var(--red);border-color:var(--red);color:#fff" onclick="confirmImportBackup()">Importar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 gsap.registerPlugin(Flip);
 
@@ -561,6 +638,18 @@ const WEEKDAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","
 const MIN_FREQ = 75;
 const HOURS_PER_CLASS = 2; // cada registro (presença/falta) equivale a 2 aulas/2h
 
+const HOLIDAYS = [
+  "2026-09-07", // Independência do Brasil
+  "2026-10-12", // Nossa Senhora Aparecida
+  "2026-10-15", // Dia do Professor
+  "2026-11-02", // Finados
+];
+const SEMESTER_END = "2026-12-17"; // último dia de aula do semestre
+
+function isHoliday(d){
+  return HOLIDAYS.includes(keyOf(d));
+}
+
 /* ============================================================
    ESTADO / STORAGE
    records = { "2026-08-31": { "seg-calc":"P", "seg-quim":"A" }, ... }
@@ -596,10 +685,14 @@ function seedHistory(){
   const start = new Date(2026,7,10);   // 10/08/2026
   const faultDay1 = new Date(2026,7,10); // faltou
   const faultDay2 = new Date(2026,7,11); // faltou
-  const end = new Date(); end.setHours(0,0,0,0);
+  const [ey,em,edd] = SEMESTER_END.split("-").map(Number);
+  const semesterEnd = new Date(ey,em-1,edd); semesterEnd.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = today < semesterEnd ? today : semesterEnd;
 
   let d = new Date(start);
   while(d <= end){
+    if(isHoliday(d)){ d.setDate(d.getDate()+1); continue; }
     const wd = d.getDay();
     const classes = SCHEDULE.filter(c=>c.weekday===wd);
     if(classes.length){
@@ -648,6 +741,73 @@ function getWeekDates(d){
 }
 
 /* ============================================================
+   PRÓXIMA AULA
+   ============================================================ */
+function classTimeToDate(baseDate, timeStr){
+  const [h,m] = timeStr.split(":").map(Number);
+  const dt = new Date(baseDate);
+  dt.setHours(h,m,0,0);
+  return dt;
+}
+
+function getNextClass(){
+  const now = new Date();
+  const [ey,em,edd] = SEMESTER_END.split("-").map(Number);
+  const semesterEnd = new Date(ey,em-1,edd); semesterEnd.setHours(23,59,59,999);
+
+  for(let offset=0; offset<14; offset++){
+    const d = new Date(now); d.setDate(now.getDate()+offset); d.setHours(0,0,0,0);
+    if(d > semesterEnd) break;
+    if(isHoliday(d)) continue;
+    const wd = d.getDay();
+    const classes = SCHEDULE.filter(c=>c.weekday===wd).slice().sort((a,b)=>a.time.localeCompare(b.time));
+    for(const c of classes){
+      const [startStr,endStr] = c.time.split("–").map(x=>x.trim());
+      const startDt = classTimeToDate(d, startStr);
+      const endDt = classTimeToDate(d, endStr);
+      if(endDt <= now) continue; // já passou
+      return {cls:c, date:d, start:startDt, end:endDt, ongoing: startDt<=now && now<endDt};
+    }
+  }
+  return null;
+}
+
+function formatNextClassCountdown(info){
+  const now = new Date();
+  if(info.ongoing) return "Agora";
+  const diffMin = Math.round((info.start-now)/60000);
+  const [startStr] = info.cls.time.split("–").map(x=>x.trim());
+  if(isSameDay(info.date, now)){
+    if(diffMin < 60) return `em ${diffMin} min`;
+    const h = Math.floor(diffMin/60), m = diffMin%60;
+    return `em ${h}h${m>0?String(m).padStart(2,"0"):""}`;
+  }
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  if(isSameDay(info.date, tomorrow)) return `amanhã às ${startStr}`;
+  return `${WEEKDAY_NAMES[info.date.getDay()]} às ${startStr}`;
+}
+
+function renderNextClassWidget(){
+  const widget = document.getElementById("nextClassWidget");
+  if(!widget) return;
+  const info = getNextClass();
+  if(!info){ widget.classList.remove("show"); widget.innerHTML=""; return; }
+
+  const s = SUBJECTS[info.cls.subj];
+  const roomTxt = info.cls.room ? `${info.cls.block} · ${info.cls.room}` : info.cls.block;
+  const ICON_BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>`;
+  widget.innerHTML = `
+    <div class="ncw-icon">${ICON_BOLT}</div>
+    <div class="ncw-info">
+      <div class="ncw-label">Próxima aula</div>
+      <div class="ncw-name">${s.emoji} ${s.name}</div>
+      <div class="ncw-meta">${info.cls.time} · ${roomTxt}</div>
+    </div>
+    <div class="ncw-countdown">${formatNextClassCountdown(info)}</div>`;
+  widget.classList.add("show");
+}
+
+/* ============================================================
    PÁGINA 1 - REGISTRAR
    ============================================================ */
 function fmtShort(d){
@@ -676,6 +836,12 @@ function renderRegister(skipStagger){
   const classes = SCHEDULE.filter(c=>c.weekday===wd);
   const box = document.getElementById("pageRegister");
 
+  if(isHoliday(current)){
+    box.innerHTML = `<div class="empty-day">🎉 Feriado — sem aula.</div>`;
+    staggerIn(box, ".empty-day");
+    return;
+  }
+
   if(classes.length===0){
     box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
     staggerIn(box, ".empty-day");
@@ -685,6 +851,7 @@ function renderRegister(skipStagger){
   const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
   const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
   const ICON_BAN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`;
+  const ICON_DOC = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6Z"/><path d="M9 13l2 2 4-4"/></svg>`;
   const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
   const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
 
@@ -695,9 +862,9 @@ function renderRegister(skipStagger){
 
   classes.forEach(c=>{
     const s = SUBJECTS[c.subj];
-    const st = dayRec[c.id]; // "P" | "A" | "N" | undefined
-    const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
-    const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":"";
+    const st = dayRec[c.id]; // "P" | "A" | "N" | "J" | undefined
+    const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":st==="J"?"justified":"";
+    const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":st==="J"?"Justificada":"";
     html += `
       <div class="cls ${cls}" id="card-${c.id}">
         <span class="status-tag">${tag}</span>
@@ -708,6 +875,7 @@ function renderRegister(skipStagger){
           <button class="${st==="P"?"sel-p":""}" onclick="mark('${dayKey}','${c.id}','P')">${ICON_CHECK}Presente</button>
           <button class="${st==="A"?"sel-a":""}" onclick="mark('${dayKey}','${c.id}','A')">${ICON_X}Falta</button>
           <button class="${st==="N"?"sel-n":""}" onclick="mark('${dayKey}','${c.id}','N')">${ICON_BAN}Sem aula</button>
+          <button class="${st==="J"?"sel-j":""}" onclick="mark('${dayKey}','${c.id}','J')">${ICON_DOC}Justificada</button>
         </div>
       </div>`;
   });
@@ -720,9 +888,14 @@ const STATUS_COLORS = {
   P:{bg:"rgba(34,197,94,.14)", fg:"#22c55e"},
   A:{bg:"rgba(239,68,68,.14)", fg:"#ef4444"},
   N:{bg:"rgba(138,143,152,.14)", fg:"#ededef"},
+  J:{bg:"rgba(59,130,246,.14)", fg:"#3b82f6"},
 };
+const STATUS_SEL_CLASS = {P:".sel-p", A:".sel-a", N:".sel-n", J:".sel-j"};
 
 function mark(dayKey, classId, status){
+  const scheduleCls = SCHEDULE.find(c=>c.id===classId);
+  const pctBefore = scheduleCls ? computeSubjectPct(scheduleCls.subj) : null;
+
   if(!records[dayKey]) records[dayKey] = {};
   // toggle: se clicar de novo no mesmo, desmarca
   let wasSet = true;
@@ -732,7 +905,8 @@ function mark(dayKey, classId, status){
     toast("Registro removido");
   }else{
     records[dayKey][classId]=status;
-    toast(status==="P"?"✓ Presença registrada":status==="A"?"✕ Falta registrada":"⊘ Marcado como sem aula");
+    const msg = status==="P"?"✓ Presença registrada":status==="A"?"✕ Falta registrada":status==="N"?"⊘ Marcado como sem aula":"📄 Falta justificada registrada";
+    toast(msg);
   }
   if(Object.keys(records[dayKey]).length===0) delete records[dayKey];
   save();
@@ -742,11 +916,15 @@ function mark(dayKey, classId, status){
   if(cardEl){
     gsap.fromTo(cardEl, {scale:1.04}, {scale:1, duration:.4, ease:"back.out(3)"});
     if(wasSet){
-      const cls = status==="P"?".sel-p":status==="A"?".sel-a":".sel-n";
-      const btn = cardEl.querySelector(cls);
+      const btn = cardEl.querySelector(STATUS_SEL_CLASS[status]);
       const c = STATUS_COLORS[status];
       if(btn) gsap.fromTo(btn, {backgroundColor:"#15161d", color:"#8a8f98"}, {backgroundColor:c.bg, color:c.fg, duration:.4, ease:"power2.out"});
     }
+  }
+
+  if(scheduleCls){
+    const pctAfter = computeSubjectPct(scheduleCls.subj);
+    checkRiskAlert(scheduleCls.subj, pctBefore, pctAfter);
   }
 }
 
@@ -762,6 +940,7 @@ function renderWeek(skipStagger){
   const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
   const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
   const ICON_BAN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`;
+  const ICON_DOC = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6Z"/><path d="M9 13l2 2 4-4"/></svg>`;
   const ICON_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
   const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
 
@@ -772,7 +951,7 @@ function renderWeek(skipStagger){
   days.forEach(d=>{
     const wd = d.getDay();
     const classes = SCHEDULE.filter(c=>c.weekday===wd);
-    if(classes.length===0) return;
+    if(classes.length===0 || isHoliday(d)) return;
     hasAnyClass = true;
     const dayKey = keyOf(d);
     const dayRec = records[dayKey] || {};
@@ -784,8 +963,8 @@ function renderWeek(skipStagger){
     classes.forEach(c=>{
       const s = SUBJECTS[c.subj];
       const st = dayRec[c.id];
-      const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
-      const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":"";
+      const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":st==="J"?"justified":"";
+      const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":st==="J"?"Justificada":"";
       html += `
         <div class="cls ${cls}" id="card-${c.id}">
           <span class="status-tag">${tag}</span>
@@ -796,6 +975,7 @@ function renderWeek(skipStagger){
             <button class="${st==="P"?"sel-p":""}" onclick="mark('${dayKey}','${c.id}','P')">${ICON_CHECK}Presente</button>
             <button class="${st==="A"?"sel-a":""}" onclick="mark('${dayKey}','${c.id}','A')">${ICON_X}Falta</button>
             <button class="${st==="N"?"sel-n":""}" onclick="mark('${dayKey}','${c.id}','N')">${ICON_BAN}Sem aula</button>
+            <button class="${st==="J"?"sel-j":""}" onclick="mark('${dayKey}','${c.id}','J')">${ICON_DOC}Justificada</button>
           </div>
         </div>`;
     });
@@ -1063,14 +1243,27 @@ function deleteExam(id){
 function closeDeleteExamModal(){
   closeModal("deleteExamModal", ()=>{ pendingDeleteExamId = null; });
 }
+let lastDeletedExam = null;
+let lastDeletedExamIndex = -1;
+let lastDeletedExamTimer;
+
 function confirmDeleteExam(){
   const id = pendingDeleteExamId;
   closeDeleteExamModal();
 
   const removeAndRender = ()=>{
+    const idx = exams.findIndex(e=>e.id===id);
+    if(idx===-1) return;
+    lastDeletedExam = exams[idx];
+    lastDeletedExamIndex = idx;
     exams = exams.filter(e=>e.id!==id);
     saveExams();
     renderExams();
+
+    clearTimeout(lastDeletedExamTimer);
+    lastDeletedExamTimer = setTimeout(()=>{ lastDeletedExam = null; }, 6000);
+
+    toast("Prova excluída", {actionLabel:"Desfazer", onAction: undoDeleteExam});
   };
 
   const cardEl = document.getElementById("exam-card-"+id);
@@ -1081,6 +1274,17 @@ function confirmDeleteExam(){
     opacity:0, height:0, marginBottom:0, paddingTop:0, paddingBottom:0,
     duration:.3, ease:"power2.out", onComplete: removeAndRender
   });
+}
+
+function undoDeleteExam(){
+  if(!lastDeletedExam) return;
+  const restoreIdx = Math.min(lastDeletedExamIndex, exams.length);
+  exams.splice(restoreIdx, 0, lastDeletedExam);
+  lastDeletedExam = null;
+  clearTimeout(lastDeletedExamTimer);
+  saveExams();
+  renderExams();
+  toast("Exclusão desfeita");
 }
 
 /* ============================================================
@@ -1119,6 +1323,12 @@ function renderAgendaDay(){
   const classes = SCHEDULE.filter(c=>c.weekday===wd);
   const box = document.getElementById("pageAgenda");
 
+  if(isHoliday(current)){
+    box.innerHTML = `<div class="empty-day">🎉 Feriado — sem aula.</div>`;
+    staggerIn(box, ".empty-day");
+    return;
+  }
+
   if(classes.length===0){
     box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
     staggerIn(box, ".empty-day");
@@ -1145,7 +1355,7 @@ function renderAgendaWeek(){
   days.forEach(d=>{
     const wd = d.getDay();
     const classes = SCHEDULE.filter(c=>c.weekday===wd);
-    if(classes.length===0) return;
+    if(classes.length===0 || isHoliday(d)) return;
     hasAnyClass = true;
     const todayFlag = isSameDay(d, today);
     html += `<div class="daygroup ${todayFlag?'is-today':''}">
@@ -1174,9 +1384,71 @@ function computeStats(){
       if(!cls) return;
       if(st==="P") acc[cls.subj].p++;
       else if(st==="A") acc[cls.subj].a++;
+      // "J" (justificada) não conta nem como presença nem como falta
     });
   });
   return acc;
+}
+
+/* Streak geral: conta aulas "P" em sequência a partir do registro mais recente.
+   "N" e "J" não quebram a sequência (mas também não contam pra ela); "A" quebra. */
+function computeStreak(){
+  const entries = [];
+  Object.entries(records).forEach(([dateKey,dayRec])=>{
+    Object.entries(dayRec).forEach(([classId,status])=>{
+      const cls = SCHEDULE.find(c=>c.id===classId);
+      if(!cls) return;
+      entries.push({dateKey, time:cls.time, status});
+    });
+  });
+  entries.sort((a,b)=> a.dateKey===b.dateKey ? a.time.localeCompare(b.time) : a.dateKey.localeCompare(b.dateKey));
+
+  let streak = 0;
+  for(let i=entries.length-1; i>=0; i--){
+    const st = entries[i].status;
+    if(st==="P") streak++;
+    else if(st==="A") break;
+    // "N" e "J" são ignorados: não somam, não quebram
+  }
+  return streak;
+}
+
+/* Conta faltas ("A") por dia da semana (1=Seg .. 4=Qui) */
+function computeAbsencesByWeekday(){
+  const counts = {1:0, 2:0, 3:0, 4:0};
+  Object.values(records).forEach(dayRec=>{
+    Object.entries(dayRec).forEach(([classId,status])=>{
+      if(status!=="A") return;
+      const cls = SCHEDULE.find(c=>c.id===classId);
+      if(!cls) return;
+      counts[cls.weekday] = (counts[cls.weekday]||0)+1;
+    });
+  });
+  return counts;
+}
+
+/* Retorna o % de frequência de UMA matéria, ou null se não há registros ainda */
+function computeSubjectPct(subjKey){
+  const acc = computeStats();
+  const {p,a} = acc[subjKey];
+  const pH = p*HOURS_PER_CLASS, aH = a*HOURS_PER_CLASS;
+  const total = pH+aH;
+  return total ? (pH/total*100) : null;
+}
+
+/* Dispara um toast de alerta só quando a frequência CRUZA pra baixo do limite
+   (75% = risco de reprovação, 80% = zona de atenção) — não repete se já estava abaixo. */
+function checkRiskAlert(subjKey, pctBefore, pctAfter){
+  if(pctAfter===null) return;
+  const enteredRed = (pctBefore===null || pctBefore>=MIN_FREQ) && pctAfter<MIN_FREQ;
+  const enteredYellow = (pctBefore===null || pctBefore>=80) && pctAfter<80 && pctAfter>=MIN_FREQ;
+  if(!enteredRed && !enteredYellow) return;
+
+  const s = SUBJECTS[subjKey];
+  const icon = enteredRed ? "🔴" : "⚠️";
+  setTimeout(()=>{
+    toast(`${icon} ${s.name} caiu para ${Math.round(pctAfter)}% de frequência`, {variant: enteredRed ? "warning" : undefined});
+  }, 1700);
 }
 
 /* ============================================================
@@ -1188,14 +1460,26 @@ function getSubjectHistory(subjKey){
     Object.entries(dayRec).forEach(([classId,status])=>{
       const cls = SCHEDULE.find(c=>c.id===classId);
       if(!cls || cls.subj!==subjKey) return;
-      entries.push({date:dateKey, status, type:cls.type, time:cls.time});
+      entries.push({date:dateKey, classId, status, type:cls.type, time:cls.time});
     });
   });
   entries.sort((a,b)=> b.date.localeCompare(a.date));
   return entries;
 }
 
+let currentHistorySubj = null;
+
+const HISTORY_ICONS = {
+  P: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+  A: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  N: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>`,
+  J: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6Z"/><path d="M9 13l2 2 4-4"/></svg>`,
+};
+const STATUS_CLASS_NAME = {P:"present", A:"absent", N:"neutral", J:"justified"};
+const STATUS_LABEL_PT = {P:"Presente", A:"Falta", N:"Sem aula", J:"Justificada"};
+
 function openSubjectHistory(subjKey){
+  currentHistorySubj = subjKey;
   const s = SUBJECTS[subjKey];
   const entries = getSubjectHistory(subjKey);
 
@@ -1204,26 +1488,34 @@ function openSubjectHistory(subjKey){
   const p = entries.filter(e=>e.status==="P").length;
   const a = entries.filter(e=>e.status==="A").length;
   const n = entries.filter(e=>e.status==="N").length;
+  const j = entries.filter(e=>e.status==="J").length;
   document.getElementById("historySummary").innerHTML = `
     <div class="hs-item"><div class="hs-num" style="color:var(--green)">${p}</div><div class="hs-lbl">Presenças</div></div>
     <div class="hs-item"><div class="hs-num" style="color:var(--red)">${a}</div><div class="hs-lbl">Faltas</div></div>
-    <div class="hs-item"><div class="hs-num" style="color:var(--muted)">${n}</div><div class="hs-lbl">Sem aula</div></div>`;
+    <div class="hs-item"><div class="hs-num" style="color:var(--muted)">${n}</div><div class="hs-lbl">Sem aula</div></div>
+    <div class="hs-item"><div class="hs-num" style="color:var(--blue)">${j}</div><div class="hs-lbl">Justif.</div></div>`;
 
   const box = document.getElementById("historyList");
   if(entries.length===0){
     box.innerHTML = `<div class="empty-day">Nenhum registro ainda pra essa matéria.</div>`;
   }else{
     box.innerHTML = entries.map(e=>{
-      const cls = e.status==="P"?"present":e.status==="A"?"absent":"neutral";
-      const label = e.status==="P"?"Presente":e.status==="A"?"Falta":"Sem aula";
+      const cls = STATUS_CLASS_NAME[e.status];
+      const label = STATUS_LABEL_PT[e.status];
       return `
         <div class="history-item ${cls}">
           <span class="hi-dot"></span>
-          <div class="hi-info">
+          <div class="hi-info" onclick="toggleHistoryEdit(this.parentElement)">
             <div class="hi-date">${fmtLong(e.date)}</div>
             <div class="hi-meta">${e.type} · ${e.time}</div>
           </div>
-          <span class="hi-tag">${label}</span>
+          <span class="hi-tag" onclick="toggleHistoryEdit(this.parentElement)">${label}</span>
+          <div class="hi-edit">
+            <button class="${e.status==="P"?"is-current p":""}" title="Presente" onclick="selectHistoryStatus('${e.date}','${e.classId}','P')">${HISTORY_ICONS.P}</button>
+            <button class="${e.status==="A"?"is-current a":""}" title="Falta" onclick="selectHistoryStatus('${e.date}','${e.classId}','A')">${HISTORY_ICONS.A}</button>
+            <button class="${e.status==="N"?"is-current n":""}" title="Sem aula" onclick="selectHistoryStatus('${e.date}','${e.classId}','N')">${HISTORY_ICONS.N}</button>
+            <button class="${e.status==="J"?"is-current j":""}" title="Justificada" onclick="selectHistoryStatus('${e.date}','${e.classId}','J')">${HISTORY_ICONS.J}</button>
+          </div>
         </div>`;
     }).join("");
   }
@@ -1232,7 +1524,16 @@ function openSubjectHistory(subjKey){
   openModal("historyModal");
 }
 function closeSubjectHistory(){
-  closeModal("historyModal");
+  closeModal("historyModal", ()=>{ currentHistorySubj = null; });
+}
+
+function toggleHistoryEdit(itemEl){
+  itemEl.classList.toggle("editing");
+}
+
+function selectHistoryStatus(dayKey, classId, status){
+  mark(dayKey, classId, status);
+  if(currentHistorySubj) openSubjectHistory(currentHistorySubj);
 }
 
 function renderStats(){
@@ -1246,6 +1547,8 @@ function renderStats(){
   const totTotal = totP+totA;
   const totPct = totTotal? (totP/totTotal*100):0;
 
+  const streak = computeStreak();
+
   let html = `
     <div class="overview">
       <h2>Frequência Geral</h2>
@@ -1256,6 +1559,10 @@ function renderStats(){
         <div class="ov-item"><div class="num">${totTotal}</div><div class="lbl">Aulas</div></div>
       </div>
     </div>`;
+
+  if(streak>0){
+    html += `<div class="streak-badge">🔥 ${streak} aula${streak===1?"":"s"} seguida${streak===1?"":"s"} sem faltar</div>`;
+  }
 
   Object.keys(SUBJECTS).forEach(k=>{
     const s = SUBJECTS[k];
@@ -1294,12 +1601,44 @@ function renderStats(){
       </div>`;
   });
 
+  // Gráfico: faltas por dia da semana
+  const absByWd = computeAbsencesByWeekday();
+  const totalAbs = Object.values(absByWd).reduce((a,b)=>a+b,0);
+  if(totalAbs < 3){
+    html += `<div class="empty-day" style="margin-bottom:18px">Ainda sem dados suficientes pra identificar um padrão de faltas.</div>`;
+  }else{
+    const wdLabels = {1:"Seg",2:"Ter",3:"Qua",4:"Qui"};
+    const maxAbs = Math.max(...Object.values(absByWd));
+    let bars = "";
+    [1,2,3,4].forEach(wd=>{
+      const v = absByWd[wd]||0;
+      const pct = maxAbs ? (v/maxAbs*100) : 0;
+      bars += `
+        <div class="wd-bar-col">
+          <div class="wd-bar-track"><div class="wd-bar-fill" style="height:${pct}%"></div></div>
+          <div class="wd-bar-val">${v}</div>
+          <div class="wd-bar-lbl">${wdLabels[wd]}</div>
+        </div>`;
+    });
+    html += `<div class="weekday-chart"><h2>Faltas por dia da semana</h2><div class="wd-bars">${bars}</div></div>`;
+  }
+
   // Ferramentas
   const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg>`;
+  const ICON_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>`;
+  const ICON_BACKUP_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0 3.5-3.5M12 13 8.5 9.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>`;
+  const ICON_BACKUP_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13V3m0 0-3.5 3.5M12 3l3.5 3.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>`;
+
   html += `
     <div class="tools">
       <button onclick="exportPDF()">${ICON_DOWNLOAD}Exportar PDF</button>
+      ${typeof navigator.share==="function" ? `<button onclick="exportPDF(true)">${ICON_SHARE}Compartilhar</button>` : ``}
     </div>
+    <div class="tools" style="margin-top:9px">
+      <button onclick="exportBackup()">${ICON_BACKUP_DOWN}Exportar backup</button>
+      <button onclick="triggerImportBackup()">${ICON_BACKUP_UP}Importar backup</button>
+    </div>
+    <input type="file" id="importBackupInput" accept="application/json" style="display:none" onchange="handleImportFile(event)">
     <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:14px">
       Frequência mínima exigida: ${MIN_FREQ}% · Dados salvos neste navegador
     </div>`;
@@ -1356,6 +1695,8 @@ function switchTab(tab){
   });
   const info = TAB_INFO[tab];
   document.getElementById("dateWrap").style.display = info.hasDateWrap?"block":"none";
+  if(info.hasDateWrap) renderNextClassWidget();
+  else document.getElementById("nextClassWidget").classList.remove("show");
   const hTitle = document.getElementById("hTitle");
   const hSub = document.getElementById("hSub");
   hTitle.textContent = info.title;
@@ -1412,7 +1753,7 @@ function switchView(mode){
 /* ============================================================
    FERRAMENTAS
    ============================================================ */
-function exportPDF(){
+async function exportPDF(shareMode){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation:"portrait", unit:"mm", format:"a4"});
   const pageW = doc.internal.pageSize.getWidth();
@@ -1529,7 +1870,7 @@ function exportPDF(){
   if(y + 20 > pageH - 15){ doc.addPage(); y = 18; }
   sectionTitle("Histórico completo");
 
-  const STATUS_LABEL = {P:"Presente", A:"Falta", N:"Sem aula"};
+  const STATUS_LABEL = {P:"Presente", A:"Falta", N:"Sem aula", J:"Justificada"};
   const historyRows = [];
   Object.entries(records).forEach(([dateKey,dayRec])=>{
     Object.entries(dayRec).forEach(([classId,status])=>{
@@ -1567,23 +1908,117 @@ function exportPDF(){
     doc.text(`Frequência mínima exigida: ${MIN_FREQ}%`, pageW/2, pageH-8, {align:"center"});
   }
 
-  doc.save("frequencia_relatorio.pdf");
+  const fileName = `frequencia_relatorio_${keyOf(new Date())}.pdf`;
+
+  if(shareMode && navigator.canShare){
+    try{
+      const blob = doc.output("blob");
+      const file = new File([blob], fileName, {type:"application/pdf"});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:"Relatório de Frequência"});
+        toast("PDF compartilhado");
+        return;
+      }
+    }catch(err){
+      // usuário cancelou o compartilhamento, ou o navegador recusou — cai pro download normal
+    }
+  }
+
+  doc.save(fileName);
   toast("PDF gerado");
 }
+
+/* ============================================================
+   BACKUP (EXPORTAR/IMPORTAR JSON)
+   ============================================================ */
+function exportBackup(){
+  const data = { records, exams };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `frequencia_backup_${keyOf(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("Backup exportado");
+}
+
+let pendingImportData = null;
+
+function triggerImportBackup(){
+  document.getElementById("importBackupInput").click();
+}
+
+function handleImportFile(e){
+  const file = e.target.files[0];
+  e.target.value = "";
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed || typeof parsed!=="object" || !("records" in parsed) || !("exams" in parsed)){
+        toast("Arquivo inválido: faltam os campos records/exams");
+        return;
+      }
+      pendingImportData = parsed;
+      openModal("importBackupModal");
+    }catch(err){
+      toast("Arquivo inválido");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function closeImportBackupModal(){
+  closeModal("importBackupModal", ()=>{ pendingImportData = null; });
+}
+
+function confirmImportBackup(){
+  if(!pendingImportData) return;
+  records = pendingImportData.records || {};
+  exams = pendingImportData.exams || [];
+  save();
+  saveExams();
+  closeImportBackupModal();
+  renderCurrentView();
+  toast("Backup importado com sucesso");
+}
+
 /* ============================================================
    TOAST
    ============================================================ */
 let toastTimer;
-function toast(msg){
+function toast(msg, opts){
   const t = document.getElementById("toast");
-  t.textContent = msg;
+  const msgEl = document.getElementById("toastMsg");
+  const actionEl = document.getElementById("toastAction");
+  msgEl.textContent = msg;
+  t.classList.toggle("warn", !!(opts && opts.variant==="warning"));
+
+  if(opts && opts.actionLabel){
+    actionEl.textContent = opts.actionLabel;
+    actionEl.style.display = "inline-block";
+    actionEl.onclick = (e)=>{
+      e.stopPropagation();
+      clearTimeout(toastTimer);
+      if(opts.onAction) opts.onAction();
+      gsap.to(t, {y:10, opacity:0, scale:.95, duration:.2, ease:"power1.in"});
+    };
+  }else{
+    actionEl.style.display = "none";
+    actionEl.onclick = null;
+  }
+
   gsap.set(t, {xPercent:-50});
   gsap.killTweensOf(t);
+  t.classList.add("show");
   gsap.fromTo(t, {y:20, opacity:0, scale:.9}, {y:0, opacity:1, scale:1, duration:.4, ease:"back.out(2)"});
   clearTimeout(toastTimer);
+  const dur = (opts && opts.actionLabel) ? 5500 : 1600;
   toastTimer = setTimeout(()=>{
-    gsap.to(t, {y:10, opacity:0, scale:.95, duration:.25, ease:"power1.in"});
-  }, 1600);
+    gsap.to(t, {y:10, opacity:0, scale:.95, duration:.25, ease:"power1.in", onComplete:()=>t.classList.remove("show")});
+  }, dur);
 }
 
 /* ============================================================
@@ -1635,6 +2070,8 @@ load();
 loadExams();
 seedHistory();
 renderRegister();
+renderNextClassWidget();
+setInterval(renderNextClassWidget, 60000);
 moveTabIndicator(activeTab, true);
 window.addEventListener("resize", ()=>moveTabIndicator(activeTab, true));
 </script>
