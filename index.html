@@ -249,11 +249,10 @@
 
   /* ===== TOAST ===== */
   .toast{
-    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    position:fixed;bottom:96px;left:50%;
     background:var(--txt);color:#0b0b0d;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;
-    opacity:0;pointer-events:none;transition:.25s var(--ease);z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* ===== TOOLS ===== */
   .tools{display:flex;gap:9px;margin-top:6px}
@@ -681,7 +680,7 @@ function renderRegister(){
   const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
 
   const todayFlag = isSameDay(current, new Date());
-  let html = `<button class="perfect-week-btn" onclick="markPerfectDay()">${ICON_STAR}Marcar dia perfeito</button>`;
+  let html = `<button class="perfect-week-btn" onclick="markPerfectDay(event)">${ICON_STAR}Marcar dia perfeito</button>`;
   html += `<div class="daygroup ${todayFlag?'is-today':''}">
     <div class="dayhead">${WEEKDAY_NAMES[wd]} ${todayFlag?'<span class="pill">HOJE</span>':''}</div>`;
 
@@ -705,6 +704,7 @@ function renderRegister(){
   });
   html += `</div>`;
   box.innerHTML = html;
+  staggerIn(box, ".cls");
 }
 
 function mark(dayKey, classId, status){
@@ -720,6 +720,8 @@ function mark(dayKey, classId, status){
   if(Object.keys(records[dayKey]).length===0) delete records[dayKey];
   save();
   if(viewMode==="week") renderWeek(); else renderRegister();
+  const cardEl = document.getElementById("card-"+classId);
+  if(cardEl) gsap.fromTo(cardEl, {scale:1.04}, {scale:1, duration:.4, ease:"back.out(3)"});
 }
 
 /* ============================================================
@@ -738,7 +740,7 @@ function renderWeek(){
   const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>`;
 
   let html = `
-    <button class="perfect-week-btn" onclick="markPerfectWeek()">${ICON_STAR}Marcar semana perfeita</button>`;
+    <button class="perfect-week-btn" onclick="markPerfectWeek(event)">${ICON_STAR}Marcar semana perfeita</button>`;
 
   let hasAnyClass = false;
   days.forEach(d=>{
@@ -759,7 +761,7 @@ function renderWeek(){
       const cls = st==="P"?"present":st==="A"?"absent":st==="N"?"neutral":"";
       const tag = st==="P"?"Presente":st==="A"?"Falta":st==="N"?"Sem aula":"";
       html += `
-        <div class="cls ${cls}">
+        <div class="cls ${cls}" id="card-${c.id}">
           <span class="status-tag">${tag}</span>
           <div class="name">${s.emoji} ${s.name}</div>
           <div class="type">${c.type}</div>
@@ -779,9 +781,10 @@ function renderWeek(){
   }
 
   box.innerHTML = html;
+  staggerIn(box, ".cls");
 }
 
-function markPerfectWeek(){
+function markPerfectWeek(evt){
   const days = getWeekDates(current);
   let count = 0;
   days.forEach(d=>{
@@ -797,10 +800,11 @@ function markPerfectWeek(){
   });
   save();
   renderWeek();
+  if(evt) burstConfetti(evt.currentTarget);
   showConfirmModal("Semana perfeita!", `${count} aula(s) marcadas como presença, sem nenhuma falta.`);
 }
 
-function markPerfectDay(){
+function markPerfectDay(evt){
   const wd = current.getDay();
   const classes = SCHEDULE.filter(c=>c.weekday===wd);
   if(classes.length===0) return;
@@ -809,7 +813,42 @@ function markPerfectDay(){
   classes.forEach(c=>{ records[dayKey][c.id] = "P"; });
   save();
   renderRegister();
+  if(evt) burstConfetti(evt.currentTarget);
   showConfirmModal("Dia perfeito!", `${classes.length} aula(s) marcadas como presença, sem nenhuma falta.`);
+}
+
+/* ============================================================
+   CONFETE (GSAP, sem canvas)
+   ============================================================ */
+function burstConfetti(originEl){
+  const rect = originEl.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const colors = ["#facc15","#22c55e","#3b82f6","#ef4444","#818cf8","#f59e0b"];
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:90;";
+  document.body.appendChild(container);
+
+  const N = 24;
+  for(let i=0;i<N;i++){
+    const p = document.createElement("div");
+    const size = 6 + Math.random()*5;
+    p.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;
+      background:${colors[i%colors.length]};border-radius:${Math.random()<.5?"50%":"3px"};`;
+    container.appendChild(p);
+
+    const angle = Math.random()*Math.PI*2;
+    const dist = 80 + Math.random()*120;
+    gsap.to(p, {
+      x: Math.cos(angle)*dist,
+      y: Math.sin(angle)*dist - 40,
+      rotation: Math.random()*360,
+      opacity: 0,
+      duration: .7 + Math.random()*.5,
+      ease: "power2.out",
+      onComplete: ()=>{ p.remove(); if(container.childElementCount===0) container.remove(); }
+    });
+  }
 }
 
 /* ============================================================
@@ -914,6 +953,7 @@ function renderExams(){
   });
 
   box.innerHTML = html;
+  staggerIn(box, ".exam-card");
 }
 
 function populateExamSubjSelect(){
@@ -1041,6 +1081,7 @@ function renderAgendaDay(){
   classes.forEach(c=>{ html += renderAgendaCard(c, current); });
   html += `</div>`;
   box.innerHTML = html;
+  staggerIn(box, ".agenda-cls");
 }
 
 function renderAgendaWeek(){
@@ -1067,6 +1108,7 @@ function renderAgendaWeek(){
     html = `<div class="empty-day">Nenhuma aula nesta semana.<br>Aproveite o descanso!</div>`;
   }
   box.innerHTML = html;
+  staggerIn(box, ".agenda-cls");
 }
 
 /* ============================================================
@@ -1156,7 +1198,7 @@ function renderStats(){
   let html = `
     <div class="overview">
       <h2>Frequência Geral</h2>
-      <div class="ov-big" style="color:${colorFor(totPct,totTotal)}">${totTotal?totPct.toFixed(0):"–"}<small>%</small></div>
+      <div class="ov-big" id="ovBigPct" data-target="${totTotal?totPct:0}" style="color:${colorFor(totPct,totTotal)}">${totTotal?"0":"–"}<small>%</small></div>
       <div class="ov-grid">
         <div class="ov-item"><div class="num" style="color:var(--green)">${totP}</div><div class="lbl">Presenças</div></div>
         <div class="ov-item"><div class="num" style="color:var(--red)">${totA}</div><div class="lbl">Faltas</div></div>
@@ -1188,9 +1230,9 @@ function renderStats(){
       <div class="stat" onclick="openSubjectHistory('${k}')">
         <div class="top">
           <div class="mname">${s.emoji} ${s.name}</div>
-          <div class="pct" style="color:${color}">${total?pct.toFixed(0)+"%":"–"}</div>
+          <div class="pct" data-target="${total?pct:0}" style="color:${color}">${total?"0%":"–"}</div>
         </div>
-        <div class="bar"><div style="width:${total?pct:0}%;background:${color}"></div></div>
+        <div class="bar"><div class="bar-fill" data-target="${total?pct:0}" style="width:0%;background:${color}"></div></div>
         <div class="meta">
           <span>✅ Presenças: <b>${pH}</b> aulas</span>
           <span>❌ Faltas: <b>${aH}</b> aulas</span>
@@ -1212,6 +1254,30 @@ function renderStats(){
     </div>`;
 
   box.innerHTML = html;
+  staggerIn(box, ".stat");
+  animateStatsNumbers(box);
+}
+
+function animateCount(el, target, suffix){
+  const obj = {v:0};
+  gsap.to(obj, {v:target, duration:.9, delay:.1, ease:"power2.out", onUpdate:()=>{
+    el.innerHTML = Math.round(obj.v)+suffix;
+  }});
+}
+
+function animateStatsNumbers(box){
+  const ovBig = box.querySelector("#ovBigPct");
+  if(ovBig && ovBig.textContent!=="–"){
+    animateCount(ovBig, parseFloat(ovBig.dataset.target), "<small>%</small>");
+  }
+  box.querySelectorAll(".pct").forEach(el=>{
+    if(el.textContent==="–") return;
+    animateCount(el, parseFloat(el.dataset.target), "%");
+  });
+  box.querySelectorAll(".bar-fill").forEach(el=>{
+    const target = parseFloat(el.dataset.target);
+    gsap.to(el, {width:target+"%", duration:.9, delay:.1, ease:"power2.out"});
+  });
 }
 
 function colorFor(pct,total){
@@ -1246,10 +1312,23 @@ function switchTab(tab){
   window.scrollTo(0,0);
 }
 
+function staggerIn(container, selector){
+  const els = container.querySelectorAll(selector);
+  if(!els.length) return;
+  gsap.killTweensOf(els);
+  gsap.from(els, {opacity:0, y:14, duration:.35, stagger:.05, ease:"power2.out"});
+}
+
 function animateTabIn(tab){
   const el = document.getElementById("page"+tab.charAt(0).toUpperCase()+tab.slice(1));
   gsap.killTweensOf(el);
   gsap.fromTo(el, {opacity:0, y:10}, {opacity:1, y:0, duration:.35, ease:"power2.out"});
+
+  const icon = document.querySelector("#tab"+tab.charAt(0).toUpperCase()+tab.slice(1)+" svg");
+  if(icon){
+    gsap.killTweensOf(icon);
+    gsap.fromTo(icon, {scale:1.4}, {scale:1, duration:.5, ease:"elastic.out(1,.5)"});
+  }
 }
 
 function switchView(mode){
@@ -1425,10 +1504,15 @@ function exportPDF(){
    ============================================================ */
 let toastTimer;
 function toast(msg){
-  const t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  gsap.set(t, {xPercent:-50});
+  gsap.killTweensOf(t);
+  gsap.fromTo(t, {y:20, opacity:0, scale:.9}, {y:0, opacity:1, scale:1, duration:.4, ease:"back.out(2)"});
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove("show"),1600);
+  toastTimer = setTimeout(()=>{
+    gsap.to(t, {y:10, opacity:0, scale:.95, duration:.25, ease:"power1.in"});
+  }, 1600);
 }
 
 /* ============================================================
