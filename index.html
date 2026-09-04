@@ -237,10 +237,14 @@
     display:flex;background:rgba(8,8,10,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom);
   }
+  .tab-indicator{
+    position:absolute;top:6px;height:3px;border-radius:999px;background:var(--accent);
+    left:0;width:0;pointer-events:none;
+  }
   .tabbar button{
     flex:1;background:none;border:none;color:var(--muted);padding:12px 4px 10px;
     font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;
-    transition:color .15s;
+    transition:color .15s;position:relative;
   }
   .tabbar button svg{width:22px;height:22px;transition:transform .15s var(--ease)}
   .tabbar button.active{color:var(--accent)}
@@ -399,6 +403,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
 </head>
 <body>
 
@@ -439,6 +444,7 @@
 
 <!-- ===== TABBAR ===== -->
 <nav class="tabbar">
+  <div class="tab-indicator" id="tabIndicator"></div>
   <button id="tabAgenda" onclick="switchTab('agenda')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
     Agenda
@@ -519,6 +525,8 @@
 </div>
 
 <script>
+gsap.registerPlugin(Flip);
+
 /* ============================================================
    GRADE HORÁRIA (baseada nas suas aulas)
    weekday: 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex
@@ -670,6 +678,7 @@ function renderRegister(skipStagger){
 
   if(classes.length===0){
     box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
+    staggerIn(box, ".empty-day");
     return;
   }
 
@@ -798,7 +807,8 @@ function renderWeek(skipStagger){
   }
 
   box.innerHTML = html;
-  if(!skipStagger) staggerIn(box, ".cls");
+  if(hasAnyClass){ if(!skipStagger) staggerIn(box, ".cls"); }
+  else staggerIn(box, ".empty-day");
 }
 
 function markPerfectWeek(evt){
@@ -947,6 +957,7 @@ function renderExams(){
   if(exams.length===0){
     html += `<div class="empty-day">Nenhuma prova cadastrada.<br>Toque no botão acima pra criar um lembrete.</div>`;
     box.innerHTML = html;
+    staggerIn(box, ".empty-day");
     return;
   }
 
@@ -956,7 +967,7 @@ function renderExams(){
     const diff = daysUntil(ex.date);
     const colorClass = examColorClass(diff);
     html += `
-      <div class="exam-card ${colorClass}">
+      <div class="exam-card ${colorClass}" id="exam-card-${ex.id}">
         <span class="countdown ${colorClass}"><span class="dot"></span>${countdownLabel(diff)}</span>
         <div class="name">${s?s.emoji+" "+s.name:"Matéria"}</div>
         <span class="type-badge ${ex.type}">${EXAM_TYPES[ex.type]}</span>
@@ -984,6 +995,9 @@ function setExamType(type){
   examTypeSel = type;
   document.getElementById("typeProva").classList.toggle("active", type==="prova");
   document.getElementById("typeAtividade").classList.toggle("active", type==="atividade");
+  const activeBtn = document.getElementById(type==="prova"?"typeProva":"typeAtividade");
+  gsap.killTweensOf(activeBtn);
+  gsap.fromTo(activeBtn, {scale:.92}, {scale:1, duration:.35, ease:"back.out(3)"});
 }
 
 let editingExamId = null;
@@ -1024,7 +1038,12 @@ function saveExam(){
     ex.subj = subj; ex.date = date; ex.type = examTypeSel; ex.note = note;
     saveExams();
     closeExamModal();
+
+    const examsBox = document.getElementById("pageExams");
+    const flipState = Flip.getState(examsBox.querySelectorAll(".exam-card"));
     renderExams();
+    Flip.from(flipState, {duration:.4, ease:"power2.out"});
+
     showConfirmModal("Lembrete atualizado!", `${EXAM_TYPES[examTypeSel]} de ${s.name} em ${fmtLong(date)}.`);
   }else{
     exams.push({id:Date.now().toString(), subj, date, type:examTypeSel, note});
@@ -1045,10 +1064,23 @@ function closeDeleteExamModal(){
   closeModal("deleteExamModal", ()=>{ pendingDeleteExamId = null; });
 }
 function confirmDeleteExam(){
-  exams = exams.filter(e=>e.id!==pendingDeleteExamId);
-  saveExams();
+  const id = pendingDeleteExamId;
   closeDeleteExamModal();
-  renderExams();
+
+  const removeAndRender = ()=>{
+    exams = exams.filter(e=>e.id!==id);
+    saveExams();
+    renderExams();
+  };
+
+  const cardEl = document.getElementById("exam-card-"+id);
+  if(!cardEl){ removeAndRender(); return; }
+
+  gsap.set(cardEl, {overflow:"hidden"});
+  gsap.to(cardEl, {
+    opacity:0, height:0, marginBottom:0, paddingTop:0, paddingBottom:0,
+    duration:.3, ease:"power2.out", onComplete: removeAndRender
+  });
 }
 
 /* ============================================================
@@ -1089,6 +1121,7 @@ function renderAgendaDay(){
 
   if(classes.length===0){
     box.innerHTML = `<div class="empty-day">Nenhuma aula neste dia.<br>Aproveite o descanso!</div>`;
+    staggerIn(box, ".empty-day");
     return;
   }
 
@@ -1125,7 +1158,7 @@ function renderAgendaWeek(){
     html = `<div class="empty-day">Nenhuma aula nesta semana.<br>Aproveite o descanso!</div>`;
   }
   box.innerHTML = html;
-  staggerIn(box, ".agenda-cls");
+  staggerIn(box, hasAnyClass ? ".agenda-cls" : ".empty-day");
 }
 
 /* ============================================================
@@ -1194,6 +1227,7 @@ function openSubjectHistory(subjKey){
         </div>`;
     }).join("");
   }
+  staggerIn(box, entries.length===0 ? ".empty-day" : ".history-item");
 
   openModal("historyModal");
 }
@@ -1322,11 +1356,28 @@ function switchTab(tab){
   });
   const info = TAB_INFO[tab];
   document.getElementById("dateWrap").style.display = info.hasDateWrap?"block":"none";
-  document.getElementById("hTitle").textContent = info.title;
-  document.getElementById("hSub").textContent = info.sub;
+  const hTitle = document.getElementById("hTitle");
+  const hSub = document.getElementById("hSub");
+  hTitle.textContent = info.title;
+  hSub.textContent = info.sub;
+  gsap.killTweensOf([hTitle, hSub]);
+  gsap.fromTo([hTitle, hSub], {opacity:0, y:8}, {opacity:1, y:0, duration:.3, ease:"power2.out", stagger:.03});
   renderCurrentView();
   animateTabIn(tab);
+  moveTabIndicator(tab);
   window.scrollTo(0,0);
+}
+
+function moveTabIndicator(tab, instant){
+  const btn = document.getElementById("tab"+tab.charAt(0).toUpperCase()+tab.slice(1));
+  const nav = document.querySelector(".tabbar");
+  const indicator = document.getElementById("tabIndicator");
+  if(!btn || !nav || !indicator) return;
+  const navRect = nav.getBoundingClientRect();
+  const btnRect = btn.getBoundingClientRect();
+  const width = btnRect.width*0.4;
+  const x = btnRect.left - navRect.left + (btnRect.width-width)/2;
+  gsap[instant?"set":"to"](indicator, {x, width, duration:instant?0:.35, ease:"power2.out"});
 }
 
 function staggerIn(container, selector){
@@ -1545,12 +1596,36 @@ function renderCurrentView(){
   viewMode==="week" ? renderWeek() : renderRegister();
 }
 
-document.getElementById("prevDay").onclick=()=>{current.setDate(current.getDate()-(viewMode==="week"?7:1));renderCurrentView();};
-document.getElementById("nextDay").onclick=()=>{current.setDate(current.getDate()+(viewMode==="week"?7:1));renderCurrentView();};
-document.getElementById("goToday").onclick=()=>{current=new Date();renderCurrentView();toast("Hoje");};
+function animateDateChange(dir, updateFn){
+  const dateInfo = document.querySelector(".dateinfo");
+  const pageEl = document.getElementById(activeTab==="agenda" ? "pageAgenda" : "pageRegister");
+  const targets = [dateInfo, pageEl].filter(Boolean);
+  const outX = dir>0 ? -16 : (dir<0 ? 16 : 0);
+  const inX = dir>0 ? 16 : (dir<0 ? -16 : 0);
+
+  gsap.killTweensOf(targets);
+  gsap.to(targets, {x:outX, opacity:0, duration:.16, ease:"power1.in", onComplete:()=>{
+    updateFn();
+    renderCurrentView();
+    gsap.fromTo(targets, {x:inX, opacity:0}, {x:0, opacity:1, duration:.3, ease:"power2.out"});
+  }});
+}
+
+document.getElementById("prevDay").onclick=()=>{
+  const delta = -(viewMode==="week"?7:1);
+  animateDateChange(-1, ()=>current.setDate(current.getDate()+delta));
+};
+document.getElementById("nextDay").onclick=()=>{
+  const delta = (viewMode==="week"?7:1);
+  animateDateChange(1, ()=>current.setDate(current.getDate()+delta));
+};
+document.getElementById("goToday").onclick=()=>{
+  animateDateChange(0, ()=>current=new Date());
+  toast("Hoje");
+};
 document.getElementById("datePicker").onchange=e=>{
   const [y,m,d]=e.target.value.split("-").map(Number);
-  current=new Date(y,m-1,d); renderCurrentView();
+  animateDateChange(0, ()=>current=new Date(y,m-1,d));
 };
 
 /* ============================================================
@@ -1560,6 +1635,8 @@ load();
 loadExams();
 seedHistory();
 renderRegister();
+moveTabIndicator(activeTab, true);
+window.addEventListener("resize", ()=>moveTabIndicator(activeTab, true));
 </script>
 </body>
 </html>
