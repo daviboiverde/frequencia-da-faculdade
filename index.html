@@ -482,6 +482,69 @@
   .next-class-widget .ncw-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
   .next-class-widget .ncw-countdown{font-size:12.5px;font-weight:800;color:var(--accent);flex-shrink:0;text-align:right;white-space:nowrap}
 
+  /* ===== DASHBOARD ===== */
+  .dash-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:14px;
+  }
+  .dash-card h2{
+    margin:0 0 14px;font-size:12.5px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.6px;font-weight:700;display:flex;align-items:center;gap:6px;
+  }
+  .dash-summary{background:linear-gradient(155deg,rgba(94,106,210,.16) 0%,var(--card) 55%)}
+  .dash-big{font-size:36px;font-weight:900;text-align:center;margin:4px 0 4px;font-variant-numeric:tabular-nums}
+  .dash-big small{font-size:15px;color:var(--muted);font-weight:600}
+  .dash-summary-grid{display:flex;gap:10px;margin-top:10px}
+  .dash-summary-item{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
+  .dash-summary-item .dash-num{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
+  .dash-summary-item .dash-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .dash-next-class{display:flex;align-items:center;gap:12px}
+  .dash-next-class .dnc-icon{
+    width:42px;height:42px;border-radius:12px;background:rgba(94,106,210,.22);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .dash-next-class .dnc-icon svg{width:22px;height:22px}
+  .dash-next-class .dnc-info{flex:1;min-width:0}
+  .dash-next-class .dnc-name{font-size:15px;font-weight:700}
+  .dash-next-class .dnc-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .dash-next-class .dnc-countdown{font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;text-align:right}
+  .dash-empty{color:var(--muted);font-size:13px;text-align:center;padding:8px 0}
+
+  .dash-subj-row{
+    display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);
+  }
+  .dash-subj-row:last-child{border-bottom:none}
+  .dash-subj-row .dsr-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .dash-subj-row .dsr-name{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dash-subj-row .dsr-pct{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;flex-shrink:0}
+
+  .dash-exam-card{display:flex;align-items:center;gap:12px}
+  .dash-exam-card .dxc-badge{
+    width:42px;height:42px;border-radius:12px;background:rgba(239,68,68,.16);color:var(--red);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;
+  }
+  .dash-exam-card .dxc-info{flex:1;min-width:0}
+  .dash-exam-card .dxc-name{font-size:15px;font-weight:700}
+  .dash-exam-card .dxc-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .dash-exam-card .dxc-countdown{font-size:13px;font-weight:800;color:var(--red);flex-shrink:0;text-align:right}
+
+  .dash-semester-dates{display:flex;justify-content:space-between;margin-bottom:12px}
+  .dash-semester-dates .dsd-item{text-align:center;flex:1}
+  .dash-semester-dates .dsd-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .dash-semester-dates .dsd-val{font-size:14px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .dash-semester-bar{height:9px;background:var(--card2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .dash-semester-bar > div{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .dash-semester-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+  .dash-semester-meta b{color:var(--txt);font-variant-numeric:tabular-nums}
+
+  .dash-situation-grid{display:flex;gap:10px}
+  .dash-situation-grid .dsg-item{
+    flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 6px;
+  }
+  .dash-situation-grid .dsg-num{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+  .dash-situation-grid .dsg-lbl{font-size:10.5px;color:var(--muted);margin-top:4px}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -514,6 +577,9 @@
   <div class="next-class-widget" id="nextClassWidget"></div>
 </header>
 
+<!-- ===== PAGE -2: DASHBOARD ===== -->
+<section class="page" id="pageDashboard"></section>
+
 <!-- ===== PAGE -1: PROVAS ===== -->
 <section class="page" id="pageExams"></section>
 
@@ -530,6 +596,10 @@
 <nav class="tabbar">
   <div class="tab-indicator" id="tabIndicator"></div>
   <div class="tabbar-row">
+    <button id="tabDashboard" onclick="switchTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+      Dashboard
+    </button>
     <button id="tabAgenda" onclick="switchTab('agenda')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
       Agenda
@@ -1638,6 +1708,167 @@ function selectHistoryStatus(dayKey, classId, status){
   if(currentHistorySubj) openSubjectHistory(currentHistorySubj);
 }
 
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  const box = document.getElementById("pageDashboard");
+  const acc = computeStats();
+
+  // ----- Card 1: Resumo geral -----
+  let totP=0, totA=0;
+  Object.values(acc).forEach(v=>{ totP+=v.p; totA+=v.a; });
+  totP*=HOURS_PER_CLASS; totA*=HOURS_PER_CLASS;
+  const totTotal = totP+totA;
+  const totPct = totTotal ? (totP/totTotal*100) : 0;
+
+  let html = `
+    <div class="dash-card dash-summary">
+      <h2>📊 Frequência Geral</h2>
+      <div class="dash-big" id="dashBigPct" data-target="${totTotal?totPct:0}" style="color:${colorFor(totPct,totTotal)}">${totTotal?"0":"–"}<small>%</small></div>
+      <div class="dash-summary-grid">
+        <div class="dash-summary-item"><div class="dash-num" style="color:var(--green)">${totP}</div><div class="dash-lbl">✅ Presenças</div></div>
+        <div class="dash-summary-item"><div class="dash-num" style="color:var(--red)">${totA}</div><div class="dash-lbl">❌ Faltas</div></div>
+      </div>
+    </div>`;
+
+  // ----- Card 2: Próxima aula -----
+  const nextInfo = getNextClass();
+  html += `<div class="dash-card"><h2>⏰ Próxima Aula</h2><div class="dash-next-class">`;
+  if(nextInfo){
+    const s = SUBJECTS[nextInfo.cls.subj];
+    const roomTxt = nextInfo.cls.room ? `${nextInfo.cls.block} · ${nextInfo.cls.room}` : nextInfo.cls.block;
+    const ICON_BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>`;
+    html += `
+      <div class="dnc-icon">${ICON_BOLT}</div>
+      <div class="dnc-info">
+        <div class="dnc-name">${s.emoji} ${s.name}</div>
+        <div class="dnc-meta">${nextInfo.cls.time} · ${roomTxt}</div>
+      </div>
+      <div class="dnc-countdown">${formatNextClassCountdown(nextInfo)}</div>`;
+  }else{
+    html += `<div class="dash-empty">Nenhuma aula futura encontrada.</div>`;
+  }
+  html += `</div></div>`;
+
+  // ----- Card 3: Matérias em atenção (ordenado da menor pra maior frequência) -----
+  const subjRows = Object.keys(SUBJECTS).map(k=>{
+    const s = SUBJECTS[k];
+    const {p,a} = acc[k];
+    const pH = p*HOURS_PER_CLASS, aH = a*HOURS_PER_CLASS;
+    const total = pH+aH;
+    const pct = total ? (pH/total*100) : null;
+    return {k, s, pct, total};
+  });
+  subjRows.sort((a,b)=>{
+    if(a.pct===null && b.pct===null) return 0;
+    if(a.pct===null) return 1;
+    if(b.pct===null) return -1;
+    return a.pct - b.pct;
+  });
+
+  let subjHtml = "";
+  subjRows.forEach(r=>{
+    const color = r.total ? colorFor(r.pct, r.total) : "var(--muted)";
+    subjHtml += `
+      <div class="dash-subj-row">
+        <span class="dsr-dot" style="background:${color}"></span>
+        <div class="dsr-name">${r.s.emoji} ${r.s.name}</div>
+        <div class="dsr-pct" style="color:${color}">${r.total?Math.round(r.pct)+"%":"–"}</div>
+      </div>`;
+  });
+  html += `<div class="dash-card"><h2>📚 Matérias em Atenção</h2>${subjHtml}</div>`;
+
+  // ----- Card 4: Próxima prova -----
+  const upcomingExams = exams
+    .filter(ex=>daysUntil(ex.date)>=0)
+    .sort((a,b)=> a.date.localeCompare(b.date));
+  html += `<div class="dash-card"><h2>📝 Próxima Prova</h2>`;
+  if(upcomingExams.length>0){
+    const ex = upcomingExams[0];
+    const s = SUBJECTS[ex.subj];
+    const diff = daysUntil(ex.date);
+    const diffTxt = diff===0?"Hoje":diff===1?"Falta 1 dia":`Faltam ${diff} dias`;
+    html += `
+      <div class="dash-exam-card">
+        <div class="dxc-badge">${s?s.emoji:"📝"}</div>
+        <div class="dxc-info">
+          <div class="dxc-name">${s?s.name:"Matéria"}</div>
+          <div class="dxc-meta">${EXAM_TYPES[ex.type]} · ${fmtLong(ex.date)}</div>
+        </div>
+        <div class="dxc-countdown">${diffTxt}</div>
+      </div>`;
+  }else{
+    html += `<div class="dash-empty">Nenhuma prova cadastrada.</div>`;
+  }
+  html += `</div>`;
+
+  // ----- Card 5: Semestre -----
+  const SEMESTER_START = "2026-08-10";
+  const [sy,sm,sd] = SEMESTER_START.split("-").map(Number);
+  const [ey2,em2,ed2] = SEMESTER_END.split("-").map(Number);
+  const semStart = new Date(sy,sm-1,sd); semStart.setHours(0,0,0,0);
+  const semEnd = new Date(ey2,em2-1,ed2); semEnd.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const totalDays = Math.round((semEnd-semStart)/86400000);
+  const elapsedDays = Math.min(Math.max(Math.round((today-semStart)/86400000), 0), totalDays);
+  const daysLeft = Math.max(Math.round((semEnd-today)/86400000), 0);
+  const semPct = totalDays ? (elapsedDays/totalDays*100) : 0;
+
+  html += `
+    <div class="dash-card">
+      <h2>🎓 Progresso do Semestre</h2>
+      <div class="dash-semester-dates">
+        <div class="dsd-item"><div class="dsd-lbl">Início</div><div class="dsd-val">${fmtLong(SEMESTER_START)}</div></div>
+        <div class="dsd-item"><div class="dsd-lbl">Final</div><div class="dsd-val">${fmtLong(SEMESTER_END)}</div></div>
+      </div>
+      <div class="dash-semester-bar"><div id="dashSemesterBar" data-target="${semPct}" style="width:0%"></div></div>
+      <div class="dash-semester-meta">
+        <span><b>${daysLeft}</b> dias restantes</span>
+        <span id="dashSemesterPct" data-target="${semPct}"><b>0</b>% concluído</span>
+      </div>
+    </div>`;
+
+  // ----- Card 6: Situação acadêmica -----
+  let safe=0, warn=0, risk=0;
+  subjRows.forEach(r=>{
+    if(r.total===0) return;
+    if(r.pct>=80) safe++;
+    else if(r.pct>=MIN_FREQ) warn++;
+    else risk++;
+  });
+  html += `
+    <div class="dash-card">
+      <h2>📈 Situação Acadêmica</h2>
+      <div class="dash-situation-grid">
+        <div class="dsg-item"><div class="dsg-num" style="color:var(--green)">${safe}</div><div class="dsg-lbl">✅ Seguras</div></div>
+        <div class="dsg-item"><div class="dsg-num" style="color:var(--yellow)">${warn}</div><div class="dsg-lbl">⚠️ Atenção</div></div>
+        <div class="dsg-item"><div class="dsg-num" style="color:var(--red)">${risk}</div><div class="dsg-lbl">🚨 Risco</div></div>
+      </div>
+    </div>`;
+
+  box.innerHTML = html;
+  staggerIn(box, ".dash-card");
+  animateDashboardNumbers(box, semPct);
+}
+
+function animateDashboardNumbers(box, semPct){
+  const bigPct = box.querySelector("#dashBigPct");
+  if(bigPct && bigPct.textContent!=="–"){
+    animateCount(bigPct, parseFloat(bigPct.dataset.target), "<small>%</small>");
+  }
+  const bar = box.querySelector("#dashSemesterBar");
+  if(bar) gsap.to(bar, {width:semPct+"%", duration:.9, delay:.1, ease:"power2.out"});
+  const pctLbl = box.querySelector("#dashSemesterPct");
+  if(pctLbl){
+    const obj = {v:0};
+    gsap.to(obj, {v:semPct, duration:.9, delay:.1, ease:"power2.out", onUpdate:()=>{
+      pctLbl.innerHTML = `<b>${Math.round(obj.v)}</b>% concluído`;
+    }});
+  }
+}
+
 function renderStats(){
   const acc = computeStats();
   const box = document.getElementById("pageStats");
@@ -1783,6 +2014,7 @@ function colorFor(pct,total){
    NAVEGAÇÃO / TABS
    ============================================================ */
 const TAB_INFO = {
+  dashboard:{title:"Dashboard",          sub:"Visão geral da sua frequência",              hasDateWrap:false},
   exams:   {title:"Provas",              sub:"Lembretes de provas e atividades avaliativas", hasDateWrap:false},
   agenda:  {title:"Agenda",              sub:"Veja a aula e a sala de hoje",              hasDateWrap:true},
   register:{title:"Registrar Frequência",sub:"Marque presença ou falta em cada aula",     hasDateWrap:true},
@@ -2127,6 +2359,7 @@ function toast(msg, opts){
    EVENTOS DE DATA
    ============================================================ */
 function renderCurrentView(){
+  if(activeTab==="dashboard"){ renderDashboard(); return; }
   if(activeTab==="stats"){ renderStats(); return; }
   if(activeTab==="exams"){ renderExams(); return; }
   if(activeTab==="agenda"){ viewMode==="week" ? renderAgendaWeek() : renderAgendaDay(); return; }
