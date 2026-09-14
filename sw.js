@@ -1,4 +1,4 @@
-const CACHE_NAME = "freq-cache-v2";
+const CACHE_NAME = "freq-cache-v3";
 
 const PRECACHE_URLS = [
   "./",
@@ -29,7 +29,9 @@ self.addEventListener("activate", event=>{
   self.clients.claim();
 });
 
-// Cache primeiro (abre instantâneo/offline), atualiza em segundo plano (stale-while-revalidate).
+// Rede primeiro (sempre pega a versão mais nova quando online), cache só como
+// fallback offline. Evita o app instalado (PWA no iPhone) ficar preso numa
+// versão antiga esperando o Service Worker notar que mudou.
 // Só cuida de pedidos same-origin — CDNs externos (GSAP, jsPDF, Google Fonts) ficam de fora.
 self.addEventListener("fetch", event=>{
   const req = event.request;
@@ -37,14 +39,12 @@ self.addEventListener("fetch", event=>{
   if(new URL(req.url).origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.open(CACHE_NAME).then(async cache=>{
-      const cached = await cache.match(req);
-      const networkFetch = fetch(req).then(res=>{
-        if(res && res.status===200) cache.put(req, res.clone());
-        return res;
-      }).catch(()=>cached);
-
-      return cached || networkFetch;
-    })
+    fetch(req).then(res=>{
+      if(res && res.status===200){
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then(cache=>cache.put(req, resClone));
+      }
+      return res;
+    }).catch(()=> caches.match(req))
   );
 });
